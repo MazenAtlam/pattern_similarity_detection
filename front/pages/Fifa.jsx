@@ -1,10 +1,10 @@
-import { useState } from 'react';
-import Layout from '../src/components/layout/Layout';
-import FifaForm from '../src/components/fifa/FifaForm';
-import FifaResults from '../src/components/fifa/FifaResults';
-import FootballPitch from '../src/components/fifa/FootballPitch';
-import PositionCharts from '../src/components/fifa/PositionCharts';
-import '../styles/Fifa.css';
+import { useState } from "react";
+import Layout from "../src/components/layout/Layout";
+import FifaForm from "../src/components/fifa/fifaForm";
+import FifaResults from "../src/components/fifa/fifaResults";
+import FootballPitch from "../src/components/fifa/FootballPitch";
+import PositionCharts from "../src/components/fifa/PositionCharts";
+import "../styles/Fifa.css";
 
 const Fifa = () => {
   const [results, setResults] = useState([]);
@@ -92,65 +92,65 @@ const Fifa = () => {
   // };
 
   return (
-      <Layout
-        pageTitle="FIFA World Cup 2022 Sequence Detector"
-        pageDescription="Analyze and compare pass sequences from the World Cup"
-      >
-        <div className="fifa-container">
-          <div className="container">
-            {/* Loading Overlay */}
-            {isLoading && (
-                <div className="loading-overlay">
-                  <div className="loading-spinner"></div>
-                </div>
-            )}
+    <Layout
+      pageTitle="FIFA World Cup 2022 Sequence Detector"
+      pageDescription="Analyze and compare pass sequences from the World Cup"
+    >
+      <div className="fifa-container">
+        <div className="container">
+          {/* Loading Overlay */}
+          {isLoading && (
+            <div className="loading-overlay">
+              <div className="loading-spinner"></div>
+            </div>
+          )}
 
-            {/* Content */}
-            <div>
-              {/* Input Form - Full Width */}
-              <div className="form-section">
-                <FifaForm
-                    // onSearchByMetadata={handleSearchByMetadata}
-                    // onUploadSequence={handleUploadSequence}
-                    isLoading={isLoading}
+          {/* Content */}
+          <div>
+            {/* Input Form - Full Width */}
+            <div className="form-section">
+              <FifaForm
+                // onSearchByMetadata={handleSearchByMetadata}
+                // onUploadSequence={handleUploadSequence}
+                isLoading={isLoading}
+              />
+            </div>
+
+            {/* Matching Sequences */}
+            {results.length > 0 && (
+              <div className="results-section">
+                <FifaResults
+                  results={results}
+                  selectedResult={selectedResult}
+                  onSelectResult={setSelectedResult}
+                  isLoading={isLoading}
                 />
               </div>
+            )}
 
-              {/* Matching Sequences */}
-              {results.length > 0 && (
-                  <div className="results-section">
-                    <FifaResults
-                        results={results}
-                        selectedResult={selectedResult}
-                        onSelectResult={setSelectedResult}
-                        isLoading={isLoading}
-                    />
-                  </div>
-              )}
+            {/* Football Pitch */}
+            {(inputSequence || selectedResult) && (
+              <div className="pitch-section">
+                <FootballPitch
+                  inputSequence={inputSequence}
+                  selectedResult={selectedResult}
+                />
+              </div>
+            )}
 
-              {/* Football Pitch */}
-              {(inputSequence || selectedResult) && (
-                  <div className="pitch-section">
-                    <FootballPitch
-                        inputSequence={inputSequence}
-                        selectedResult={selectedResult}
-                    />
-                  </div>
-              )}
-
-              {/* Position Charts - Full Width */}
-              {(inputSequence || selectedResult) && (
-                  <div className="charts-section">
-                    <PositionCharts
-                        inputSequence={inputSequence}
-                        selectedResult={selectedResult}
-                    />
-                  </div>
-              )}
-            </div>
+            {/* Position Charts - Full Width */}
+            {(inputSequence || selectedResult) && (
+              <div className="charts-section">
+                <PositionCharts
+                  inputSequence={inputSequence}
+                  selectedResult={selectedResult}
+                />
+              </div>
+            )}
           </div>
         </div>
-      </Layout>
+      </div>
+    </Layout>
   );
 };
 

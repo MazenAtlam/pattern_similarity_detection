@@ -1,12 +1,17 @@
+// src/components/audio/AudioRecorder.js
 import { useState, useRef, useEffect } from "react";
-import { Mic, Square, Upload, FileAudio, X } from "lucide-react";
+import { Mic, Square, Upload, FileAudio, X, Play, Pause } from "lucide-react";
 
 const AudioRecorder = ({ onAudioReady }) => {
   const [isRecording, setIsRecording] = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
   const [uploadedFile, setUploadedFile] = useState(null);
+  const [audioUrl, setAudioUrl] = useState(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [activeTab, setActiveTab] = useState("record");
   const [waveformBars, setWaveformBars] = useState(Array(20).fill(0.3));
   const fileInputRef = useRef(null);
+  const audioRef = useRef(null);
   const timerRef = useRef();
 
   useEffect(() => {
@@ -43,6 +48,8 @@ const AudioRecorder = ({ onAudioReady }) => {
     setIsRecording(false);
     // Simulate creating a blob
     const mockBlob = new Blob(["mock audio data"], { type: "audio/wav" });
+    const url = URL.createObjectURL(mockBlob);
+    setAudioUrl(url);
     onAudioReady(mockBlob);
   };
 
@@ -50,6 +57,8 @@ const AudioRecorder = ({ onAudioReady }) => {
     const file = e.target.files?.[0];
     if (file) {
       setUploadedFile(file);
+      const url = URL.createObjectURL(file);
+      setAudioUrl(url);
       onAudioReady(file);
     }
   };
@@ -59,6 +68,8 @@ const AudioRecorder = ({ onAudioReady }) => {
     const file = e.dataTransfer.files?.[0];
     if (file && (file.type === "audio/wav" || file.type === "audio/mpeg")) {
       setUploadedFile(file);
+      const url = URL.createObjectURL(file);
+      setAudioUrl(url);
       onAudioReady(file);
     }
   };
@@ -75,21 +86,29 @@ const AudioRecorder = ({ onAudioReady }) => {
     return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}.${cs}`;
   };
 
+  const handlePlayPause = () => {
+    if (audioRef.current) {
+      if (isPlaying) {
+        audioRef.current.pause();
+      } else {
+        audioRef.current.play();
+      }
+      setIsPlaying(!isPlaying);
+    }
+  };
+
   return (
     <div className="card glass-card">
       <div className="card-header">
         <h5 className="card-title mb-0">Audio Input</h5>
       </div>
       <div className="card-body">
-        <ul className="nav nav-tabs mb-4" role="tablist">
+        <ul className="nav nav-tabs mb-4" id="audioTabs" role="tablist">
           <li className="nav-item" role="presentation">
             <button
-              className="nav-link active"
-              id="record-tab"
-              data-bs-toggle="tab"
-              data-bs-target="#record"
+              className={`nav-link ${activeTab === "record" ? "active" : ""}`}
+              onClick={() => setActiveTab("record")}
               type="button"
-              role="tab"
             >
               <Mic style={{ width: "16px", height: "16px" }} className="me-2" />
               Record
@@ -97,12 +116,9 @@ const AudioRecorder = ({ onAudioReady }) => {
           </li>
           <li className="nav-item" role="presentation">
             <button
-              className="nav-link"
-              id="upload-tab"
-              data-bs-toggle="tab"
-              data-bs-target="#upload"
+              className={`nav-link ${activeTab === "upload" ? "active" : ""}`}
+              onClick={() => setActiveTab("upload")}
               type="button"
-              role="tab"
             >
               <Upload
                 style={{ width: "16px", height: "16px" }}
@@ -115,13 +131,11 @@ const AudioRecorder = ({ onAudioReady }) => {
 
         <div className="tab-content">
           <div
-            className="tab-pane fade show active"
-            id="record"
-            role="tabpanel"
+            className={`tab-pane fade ${activeTab === "record" ? "show active" : ""}`}
           >
             {/* Waveform Visualization */}
             <div
-              className="bg-light rounded-3 d-flex align-items-center justify-content-center gap-1 px-4 mb-4"
+              className="bg-light bg-opacity-25 rounded-3 d-flex align-items-center justify-content-center gap-1 px-4 mb-4"
               style={{ height: "96px" }}
             >
               {waveformBars.map((height, index) => (
@@ -131,9 +145,7 @@ const AudioRecorder = ({ onAudioReady }) => {
                   style={{
                     width: "8px",
                     height: `${height * 100}%`,
-                    backgroundColor: isRecording
-                      ? "var(--primary)"
-                      : "var(--gray-400)",
+                    backgroundColor: isRecording ? "#667eea" : "#6c757d",
                     transitionDelay: `${index * 10}ms`,
                     transitionDuration: "100ms",
                   }}
@@ -177,18 +189,21 @@ const AudioRecorder = ({ onAudioReady }) => {
             </p>
           </div>
 
-          <div className="tab-pane fade" id="upload" role="tabpanel">
+          <div
+            className={`tab-pane fade ${activeTab === "upload" ? "show active" : ""}`}
+          >
             <div
-              className="border-2 border-dashed rounded-3 p-5 text-center hover-border-primary cursor-pointer"
+              className="border-2 border-dashed border-secondary rounded-3 p-5 text-center hover-border-primary cursor-pointer"
               onClick={() => fileInputRef.current?.click()}
               onDrop={handleDrop}
               onDragOver={handleDragOver}
+              style={{ transition: "all 0.3s ease" }}
             >
               <input
                 type="file"
                 ref={fileInputRef}
                 className="d-none"
-                accept=".wav,.mp3,audio/wav,audio/mpeg"
+                accept=".wav,.mp3,.m4a,.ogg,.flac,audio/*"
                 onChange={handleFileUpload}
               />
               <div
@@ -196,16 +211,12 @@ const AudioRecorder = ({ onAudioReady }) => {
                 style={{ width: "64px", height: "64px" }}
               >
                 <FileAudio
-                  style={{
-                    width: "32px",
-                    height: "32px",
-                    color: "var(--primary)",
-                  }}
+                  style={{ width: "32px", height: "32px", color: "#667eea" }}
                 />
               </div>
               <p className="fw-medium mb-2">Drop your audio file here</p>
               <p className="text-muted small mb-0">
-                or click to browse (.wav, .mp3)
+                or click to browse (WAV, MP3, M4A, OGG, FLAC)
               </p>
             </div>
 
@@ -213,16 +224,13 @@ const AudioRecorder = ({ onAudioReady }) => {
               <div className="d-flex align-items-center justify-content-between p-3 bg-light rounded-3 mt-3">
                 <div className="d-flex align-items-center gap-3">
                   <FileAudio
-                    style={{
-                      width: "20px",
-                      height: "20px",
-                      color: "var(--primary)",
-                    }}
+                    style={{ width: "20px", height: "20px", color: "#667eea" }}
                   />
                   <div>
                     <p className="fw-medium small mb-1">{uploadedFile.name}</p>
                     <p className="text-muted x-small mb-0">
-                      {(uploadedFile.size / 1024).toFixed(1)} KB
+                      {(uploadedFile.size / 1024).toFixed(1)} KB •{" "}
+                      {uploadedFile.type}
                     </p>
                   </div>
                 </div>
@@ -236,52 +244,49 @@ const AudioRecorder = ({ onAudioReady }) => {
             )}
           </div>
         </div>
+
+        {/* Audio Preview */}
+        {audioUrl && (
+          <div className="mt-4 p-3 bg-light rounded-3">
+            <div className="d-flex justify-content-between align-items-center mb-2">
+              <h6 className="mb-0">Audio Preview</h6>
+              <button
+                className="btn btn-sm btn-outline-primary"
+                onClick={handlePlayPause}
+              >
+                {isPlaying ? (
+                  <>
+                    <Pause
+                      style={{ width: "16px", height: "16px" }}
+                      className="me-1"
+                    />
+                    Pause
+                  </>
+                ) : (
+                  <>
+                    <Play
+                      style={{ width: "16px", height: "16px" }}
+                      className="me-1"
+                    />
+                    Play
+                  </>
+                )}
+              </button>
+            </div>
+            <audio
+              ref={audioRef}
+              src={audioUrl}
+              controls
+              className="w-100"
+              onEnded={() => setIsPlaying(false)}
+              onPause={() => setIsPlaying(false)}
+              onPlay={() => setIsPlaying(true)}
+            />
+          </div>
+        )}
       </div>
     </div>
   );
 };
 
 export default AudioRecorder;
-
-<style jsx>{`
-  .glass-card {
-    background: rgba(255, 255, 255, 0.7);
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: 12px;
-  }
-
-  .btn-gradient {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    border: none;
-  }
-
-  .hover-border-primary:hover {
-    border-color: var(--primary) !important;
-    background-color: rgba(var(--primary-rgb), 0.05);
-  }
-
-  .cursor-pointer {
-    cursor: pointer;
-  }
-
-  .pulse-ring {
-    animation: pulse 2s infinite;
-  }
-
-  @keyframes pulse {
-    0% {
-      transform: scale(0.95);
-      opacity: 0.7;
-    }
-    50% {
-      transform: scale(1.05);
-      opacity: 0.3;
-    }
-    100% {
-      transform: scale(0.95);
-      opacity: 0.7;
-    }
-  }
-`}</style>;
