@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fourier API Tester</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; max-width: 800px; margin: 2rem auto; padding: 0 1rem; background-color: #f8fafc; }
+        .card { background: white; border: 1px solid #e2e8f0; padding: 1.5rem; border-radius: 12px; margin-bottom: 2rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
+        h1 { color: #0f172a; }
+        h2 { margin-top: 0; color: #0ea5e9; font-size: 1.25rem; }
+        
+        button { background: #0ea5e9; color: white; border: none; padding: 0.6rem 1.2rem; border-radius: 6px; cursor: pointer; font-weight: 600; transition: background 0.2s; }
+        button:hover { background: #0284c7; }
+        button:disabled { background: #cbd5e1; cursor: not-allowed; }
+        button.record { background-color: #ef4444; }
+        button.record:hover { background-color: #dc2626; }
+        button.stop { background-color: #334155; }
+
+        pre { background: #1e293b; color: #a5f3fc; padding: 1rem; border-radius: 8px; overflow-x: auto; font-size: 0.9rem; }
+        .status { margin-top: 0.5rem; font-weight: 500; }
+        .recording-indicator { display: inline-block; width: 10px; height: 10px; background-color: red; border-radius: 50%; margin-right: 5px; animation: pulse 1s infinite; display: none; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+    </style>
+</head>
+<body>
+
+    <h1>🎵 Fourier Backend Tester</h1>
+    <p>Test the API with files or live humming.</p>
+
+    <div class="card">
+        <h2>1. Server Health Check</h2>
+        <button onclick="checkHealth()">Ping Server</button>
+        <div id="health-result" class="status"></div>
+    </div>
+
+    <div class="card">
+        <h2>2. Live Humming Detector 🎤</h2>
+        <p>Click record, hum for 5-10 seconds, then stop to send.</p>
+        
+        <div style="margin-bottom: 1rem;">
+            <span id="rec-dot" class="recording-indicator"></span>
+            <span id="rec-status">Ready to record</span>
+        </div>
+
+        <button id="btn-start" onclick="startRecording()" class="record">Start Recording</button>
+        <button id="btn-stop" onclick="stopRecording()" class="stop" disabled>Stop & Send</button>
+
+        <h3>API Response:</h3>
+        <pre id="hum-result">Waiting for input...</pre>
+    </div>
+
+    <script>
+        const API_BASE = 'http://127.0.0.1:5000';
+        let mediaRecorder;
+        let audioChunks = [];
+
+        // 1. Health Check
+        async function checkHealth() {
+            const resDiv = document.getElementById('health-result');
+            resDiv.innerText = "Pinging...";
+            try {
+                const res = await fetch(`${API_BASE}/`);
+                const data = await res.json();
+                resDiv.innerText = `✅ Connected: ${data.project}`;
+            } catch (err) {
+                resDiv.innerText = `❌ Error: ${err.message}`;
+            }
+        }
+
+        // 2. Start Recording
+        async function startRecording() {
+            audioChunks = []; // Reset chunks
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            
+            mediaRecorder = new MediaRecorder(stream);
+            
+            mediaRecorder.ondataavailable = event => {
+                audioChunks.push(event.data);
+            };
+
+            mediaRecorder.onstop = sendAudioToServer;
+
+            mediaRecorder.start();
+
+            // UI Updates
+            document.getElementById('btn-start').disabled = true;
+            document.getElementById('btn-stop').disabled = false;
+            document.getElementById('rec-dot').style.display = 'inline-block';
+            document.getElementById('rec-status').innerText = "Recording... (Hum now!)";
+        }
+
+        // 3. Stop Recording
+        function stopRecording() {
+            mediaRecorder.stop();
+            
+            // UI Updates
+            document.getElementById('btn-start').disabled = false;
+            document.getElementById('btn-stop').disabled = true;
+            document.getElementById('rec-dot').style.display = 'none';
+            document.getElementById('rec-status').innerText = "Processing...";
+        }
+
+        // 4. Send to Backend
+        async function sendAudioToServer() {
+            const resultPre = document.getElementById('hum-result');
+            
+            // Create a blob from the chunks
+            // Browsers usually record in 'audio/webm' or 'audio/ogg'
+            const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+            
+            // Create FormData (mimics a file upload)
+            const formData = new FormData();
+            // We name it 'humming.webm' so the backend accepts it
+            formData.append('audio_data', audioBlob, 'humming.webm');
+
+            resultPre.innerText = "Sending audio to backend...";
+
+            try {
+                const response = await fetch(`${API_BASE}/api/v1/songs/detect`, {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await response.json();
+                resultPre.innerText = JSON.stringify(data, null, 2);
+            } catch (error) {
+                resultPre.innerText = "Error: " + error.message;
+            }
+        }
+    </script>
+</body>
+</html>
