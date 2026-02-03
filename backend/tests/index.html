@@ -1,132 +1,425 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fourier API Tester</title>
+    <title>Humming Detector Universal Tester</title>
     <style>
-        body { font-family: 'Segoe UI', sans-serif; max-width: 800px; margin: 2rem auto; padding: 0 1rem; background-color: #f8fafc; }
-        .card { background: white; border: 1px solid #e2e8f0; padding: 1.5rem; border-radius: 12px; margin-bottom: 2rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
-        h1 { color: #0f172a; }
-        h2 { margin-top: 0; color: #0ea5e9; font-size: 1.25rem; }
-        
-        button { background: #0ea5e9; color: white; border: none; padding: 0.6rem 1.2rem; border-radius: 6px; cursor: pointer; font-weight: 600; transition: background 0.2s; }
-        button:hover { background: #0284c7; }
-        button:disabled { background: #cbd5e1; cursor: not-allowed; }
-        button.record { background-color: #ef4444; }
-        button.record:hover { background-color: #dc2626; }
-        button.stop { background-color: #334155; }
+        :root {
+            --primary: #6366f1;
+            --primary-hover: #4f46e5;
+            --bg: #f3f4f6;
+            --card: #ffffff;
+            --text: #1f2937;
+            --text-light: #6b7280;
+        }
 
-        pre { background: #1e293b; color: #a5f3fc; padding: 1rem; border-radius: 8px; overflow-x: auto; font-size: 0.9rem; }
-        .status { margin-top: 0.5rem; font-weight: 500; }
-        .recording-indicator { display: inline-block; width: 10px; height: 10px; background-color: red; border-radius: 50%; margin-right: 5px; animation: pulse 1s infinite; display: none; }
-        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 600px;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 2rem;
+            color: #111827;
+            font-size: 1.8rem;
+        }
+
+        .card {
+            background: var(--card);
+            padding: 2rem;
+            border-radius: 16px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            margin-bottom: 1.5rem;
+        }
+
+        .control-group {
+            margin-bottom: 1.5rem;
+        }
+
+        label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: #374151;
+        }
+
+        select,
+        input[type="file"] {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 1rem;
+            background: #f9fafb;
+        }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            margin-bottom: 1.5rem;
+            background: #e5e7eb;
+            padding: 4px;
+            border-radius: 10px;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 0.75rem;
+            text-align: center;
+            cursor: pointer;
+            border-radius: 8px;
+            font-weight: 500;
+            color: var(--text-light);
+            transition: all 0.2s;
+        }
+
+        .tab.active {
+            background: white;
+            color: var(--primary);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .input-section {
+            display: none;
+        }
+
+        .input-section.active {
+            display: block;
+        }
+
+        /* Buttons */
+        .btn {
+            display: block;
+            width: 100%;
+            padding: 0.85rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .btn-primary {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--primary-hover);
+        }
+
+        .btn-record {
+            background-color: #ef4444;
+            color: white;
+        }
+
+        .btn-record:hover {
+            background-color: #dc2626;
+        }
+
+        .btn-stop {
+            background-color: #374151;
+            color: white;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Results */
+        .result-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+        }
+
+        .result-info {
+            flex: 1;
+            margin-right: 1rem;
+        }
+
+        .song-title {
+            font-weight: 700;
+            display: block;
+            margin-bottom: 0.25rem;
+        }
+
+        .match-score {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .score-high {
+            background-color: #dcfce7;
+            color: #166534;
+        }
+
+        .score-med {
+            background-color: #fef9c3;
+            color: #854d0e;
+        }
+
+        .score-low {
+            background-color: #fee2e2;
+            color: #991b1b;
+        }
+
+        audio {
+            height: 36px;
+            max-width: 200px;
+        }
+
+        .loading {
+            text-align: center;
+            color: var(--text-light);
+            display: none;
+        }
+
+        .recording-pulse {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            background-color: #ef4444;
+            border-radius: 50%;
+            margin-right: 8px;
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.4;
+            }
+
+            100% {
+                opacity: 1;
+            }
+        }
     </style>
 </head>
+
 <body>
 
-    <h1>🎵 Fourier Backend Tester</h1>
-    <p>Test the API with files or live humming.</p>
+    <div class="container">
+        <h1>🎤 Humming Detector</h1>
 
-    <div class="card">
-        <h2>1. Server Health Check</h2>
-        <button onclick="checkHealth()">Ping Server</button>
-        <div id="health-result" class="status"></div>
-    </div>
+        <div class="card">
+            <!-- Version Selector -->
+            <div class="control-group">
+                <label for="algo-version">Algorithm Version</label>
+                <select id="algo-version">
+                    <option value="v0">v0 (Chroma CENS - Default)</option>
+                    <option value="v1">v1 (Pitch Contour - Accurate)</option>
+                    <option value="v2">v2 (Pitch Contour - Fast)</option>
+                    <option value="v3">v3 (Smart Fast Pitch - HPSS) 🌟</option>
+                </select>
+            </div>
 
-    <div class="card">
-        <h2>2. Live Humming Detector 🎤</h2>
-        <p>Click record, hum for 5-10 seconds, then stop to send.</p>
-        
-        <div style="margin-bottom: 1rem;">
-            <span id="rec-dot" class="recording-indicator"></span>
-            <span id="rec-status">Ready to record</span>
+            <!-- Input Tabs -->
+            <div class="tabs">
+                <div class="tab active" onclick="switchTab('mic')">Microphone</div>
+                <div class="tab" onclick="switchTab('file')">Upload File</div>
+            </div>
+
+            <!-- Mic Input -->
+            <div id="section-mic" class="input-section active">
+                <div style="text-align: center; margin-bottom: 1.5rem; height: 1.5rem;">
+                    <span id="rec-status" style="font-weight: 500;">Ready to record</span>
+                </div>
+
+                <button id="btn-record" class="btn btn-record" onclick="toggleRecording()">
+                    Start Recording
+                </button>
+            </div>
+
+            <!-- File Input -->
+            <div id="section-file" class="input-section">
+                <div class="control-group">
+                    <input type="file" id="file-upload" accept="audio/*">
+                </div>
+                <button class="btn btn-primary" onclick="uploadFile()">Analyze File</button>
+            </div>
         </div>
 
-        <button id="btn-start" onclick="startRecording()" class="record">Start Recording</button>
-        <button id="btn-stop" onclick="stopRecording()" class="stop" disabled>Stop & Send</button>
-
-        <h3>API Response:</h3>
-        <pre id="hum-result">Waiting for input...</pre>
+        <!-- Results Area -->
+        <div id="loading" class="loading">Analyzing audio... 🎶</div>
+        <div id="results-area"></div>
     </div>
 
     <script>
         const API_BASE = 'http://127.0.0.1:5000';
         let mediaRecorder;
         let audioChunks = [];
+        let isRecording = false;
 
-        // 1. Health Check
-        async function checkHealth() {
-            const resDiv = document.getElementById('health-result');
-            resDiv.innerText = "Pinging...";
-            try {
-                const res = await fetch(`${API_BASE}/`);
-                const data = await res.json();
-                resDiv.innerText = `✅ Connected: ${data.project}`;
-            } catch (err) {
-                resDiv.innerText = `❌ Error: ${err.message}`;
+        function switchTab(mode) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.input-section').forEach(s => s.classList.remove('active'));
+
+            if (mode === 'mic') {
+                document.querySelectorAll('.tab')[0].classList.add('active');
+                document.getElementById('section-mic').classList.add('active');
+            } else {
+                document.querySelectorAll('.tab')[1].classList.add('active');
+                document.getElementById('section-file').classList.add('active');
             }
         }
 
-        // 2. Start Recording
-        async function startRecording() {
-            audioChunks = []; // Reset chunks
-            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-            
-            mediaRecorder = new MediaRecorder(stream);
-            
-            mediaRecorder.ondataavailable = event => {
-                audioChunks.push(event.data);
-            };
+        // --- Recording Logic ---
+        async function toggleRecording() {
+            const btn = document.getElementById('btn-record');
+            const status = document.getElementById('rec-status');
 
-            mediaRecorder.onstop = sendAudioToServer;
+            if (!isRecording) {
+                // Start
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    mediaRecorder = new MediaRecorder(stream);
+                    audioChunks = [];
 
-            mediaRecorder.start();
+                    mediaRecorder.ondataavailable = event => audioChunks.push(event.data);
+                    mediaRecorder.onstop = processRecording;
 
-            // UI Updates
-            document.getElementById('btn-start').disabled = true;
-            document.getElementById('btn-stop').disabled = false;
-            document.getElementById('rec-dot').style.display = 'inline-block';
-            document.getElementById('rec-status').innerText = "Recording... (Hum now!)";
+                    mediaRecorder.start();
+                    isRecording = true;
+
+                    btn.textContent = "Stop & Analyze";
+                    btn.classList.replace('btn-record', 'btn-stop');
+                    status.innerHTML = '<span class="recording-pulse"></span> Recording...';
+
+                } catch (err) {
+                    alert("Microphone access denied: " + err.message);
+                }
+            } else {
+                // Stop
+                mediaRecorder.stop();
+                isRecording = false;
+
+                btn.textContent = "Start Recording";
+                btn.classList.replace('btn-stop', 'btn-record');
+                status.textContent = "Processing...";
+            }
         }
 
-        // 3. Stop Recording
-        function stopRecording() {
-            mediaRecorder.stop();
-            
-            // UI Updates
-            document.getElementById('btn-start').disabled = false;
-            document.getElementById('btn-stop').disabled = true;
-            document.getElementById('rec-dot').style.display = 'none';
-            document.getElementById('rec-status').innerText = "Processing...";
+        async function processRecording() {
+            const blob = new Blob(audioChunks, { type: 'audio/webm' });
+            sendToBackend(blob, 'humming.webm');
         }
 
-        // 4. Send to Backend
-        async function sendAudioToServer() {
-            const resultPre = document.getElementById('hum-result');
-            
-            // Create a blob from the chunks
-            // Browsers usually record in 'audio/webm' or 'audio/ogg'
-            const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
-            
-            // Create FormData (mimics a file upload)
+        async function uploadFile() {
+            const fileInput = document.getElementById('file-upload');
+            if (fileInput.files.length === 0) {
+                alert("Please select a file first.");
+                return;
+            }
+            const file = fileInput.files[0];
+            sendToBackend(file, file.name);
+        }
+
+        // --- Backend Communication ---
+        async function sendToBackend(audioBlob, filename) {
+            const version = document.getElementById('algo-version').value;
+            const resultsArea = document.getElementById('results-area');
+            const loading = document.getElementById('loading');
+
+            loading.style.display = 'block';
+            resultsArea.innerHTML = '';
+
             const formData = new FormData();
-            // We name it 'humming.webm' so the backend accepts it
-            formData.append('audio_data', audioBlob, 'humming.webm');
-
-            resultPre.innerText = "Sending audio to backend...";
+            formData.append('audio_data', audioBlob, filename);
+            formData.append('version', version);
 
             try {
-                const response = await fetch(`${API_BASE}/api/v1/songs/detect`, {
+                const res = await fetch(`${API_BASE}/api/v1/songs/detect`, {
                     method: 'POST',
                     body: formData
                 });
-                const data = await response.json();
-                resultPre.innerText = JSON.stringify(data, null, 2);
-            } catch (error) {
-                resultPre.innerText = "Error: " + error.message;
+                const data = await res.json();
+
+                loading.style.display = 'none';
+
+                if (data.status === 'success') {
+                    renderResults(data.results);
+                } else {
+                    resultsArea.innerHTML = `<div class="card" style="color: red;">Error: ${data.message || data.error}</div>`;
+                }
+            } catch (err) {
+                loading.style.display = 'none';
+                resultsArea.innerHTML = `<div class="card" style="color: red;">Network Error: ${err.message}</div>`;
+            }
+        }
+
+        function renderResults(results) {
+            const container = document.getElementById('results-area');
+
+            if (results.length === 0) {
+                container.innerHTML = '<div class="card">No matches found.</div>';
+                return;
+            }
+
+            results.forEach((match, index) => {
+                const score = match.similarity_index;
+                let scoreClass = 'score-low';
+                if (score >= 80) scoreClass = 'score-high';
+                else if (score >= 50) scoreClass = 'score-med';
+
+                // Auto-play the first result if confidence is high
+                const autoPlay = (index === 0 && score > 80) ? 'autoplay' : '';
+
+                const html = `
+                <div class="result-item">
+                    <div class="result-info">
+                        <span class="song-title">${match.song_name}</span>
+                        <span class="match-score ${scoreClass}">${score.toFixed(1)}% Match</span>
+                    </div>
+                    <audio controls ${autoPlay}>
+                        <source src="${API_BASE}${match.file_url}" type="audio/mpeg">
+                        Your browser does not support the audio element.
+                    </audio>
+                </div>
+            `;
+                container.innerHTML += html;
+            });
+
+            // Wrap in a card if there are result
+            if (container.children.length > 0) {
+                const wrapper = document.createElement('div');
+                wrapper.className = 'card';
+                wrapper.innerHTML = '<h2>Top Matches</h2>' + container.innerHTML;
+                container.innerHTML = '';
+                container.appendChild(wrapper);
             }
         }
     </script>
+
 </body>
+
 </html>
