@@ -123,14 +123,29 @@ def detect_pass_sequences():
             "error": str(e)
         }), 500
 
-@app.route('/api/v1/sequences/count', methods=['GET'])
+@app.route('/api/v1/pass_sequences/count', methods=['POST'])
 def get_sequence_count():
     try:
-        match_id = request.args.get('match_id')
-        length = int(request.args.get('length', 1))
+        data = request.get_json()
+        if not data or 'sequence_path' not in data:
+             return jsonify({"status": "failed", "error": "Missing sequence_path"}), 400
+             
+        seq_path = data['sequence_path']
+        if not os.path.exists(seq_path):
+             return jsonify({"status": "failed", "error": f"File not found: {seq_path}"}), 404
+             
+        # Load pickle to get Match ID and Length
+        with open(seq_path, 'rb') as f:
+            content = pickle.load(f)
+            
+        # Handle list or dict
+        query = content[0] if isinstance(content, list) else content
+        
+        match_id = query.get('game_id')
+        length = query.get('length', 1)
         
         if not match_id:
-             return jsonify({"status": "failed", "error": "Missing match_id"}), 400
+            return jsonify({"status": "failed", "error": "Could not determine match_id from file"}), 400
              
         # Load DB level
         if db.current_length != length:
@@ -144,9 +159,7 @@ def get_sequence_count():
                 
         return jsonify({
             "status": "success",
-            "match_id": match_id,
-            "length": length,
-            "count": count
+            "sequences_count": count
         })
         
     except Exception as e:

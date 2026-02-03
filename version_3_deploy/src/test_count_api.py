@@ -1,14 +1,19 @@
 import requests
 import json
+import os
 
-# Match 10503 (Argentina vs Australia) - User's example
-match_id = "10503"
-length = 6
-url = f"http://127.0.0.1:5000/api/v1/sequences/count?match_id={match_id}&length={length}"
+url = "http://127.0.0.1:5000/api/v1/pass_sequences/count"
+pkl_path = os.path.abspath("test_count_query.pkl")
 
-print(f"GET {url}")
+payload = {
+    "sequence_path": pkl_path
+}
+
+print(f"POST {url}")
+print(f"Payload: {json.dumps(payload, indent=2)}")
+
 try:
-    response = requests.get(url)
+    response = requests.post(url, json=payload)
     print(f"Status: {response.status_code}")
     print(json.dumps(response.json(), indent=2))
 except Exception as e:
