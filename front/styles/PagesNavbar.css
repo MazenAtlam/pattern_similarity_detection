@@ -1,0 +1,108 @@
+/* Main container */
+.fifa-container {
+    min-height: 100vh;
+    padding: 3rem 0;
+    background-color: #f8f9fa;
+}
+
+/* Header section */
+.fifa-header {
+    display: flex;
+    flex-direction: column;
+}
+
+@media (min-width: 576px) {
+    .fifa-header {
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+    }
+}
+
+.fifa-header-left {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+@media (min-width: 576px) {
+    .fifa-header-left {
+        margin-bottom: 0;
+    }
+}
+
+.fifa-title-container {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.fifa-icon-container {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #6f42c1 0%, #6f42c180 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.fifa-icon {
+    width: 20px;
+    height: 20px;
+    color: white;
+}
+
+.fifa-title {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: #212529;
+    margin: 0;
+    line-height: 1.2;
+}
+
+@media (min-width: 768px) {
+    .fifa-title {
+        font-size: 2rem;
+    }
+}
+
+.fifa-subtitle {
+    color: #6c757d;
+    margin-top: 0.5rem;
+    font-size: 0.875rem;
+}
+
+/* Back button */
+.back-button {
+    border: none;
+    background: transparent;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #6c757d;
+    transition: all 0.2s ease;
+    padding: 0;
+    flex-shrink: 0;
+}
+
+.back-button:hover {
+    background-color: rgba(108, 117, 125, 0.1);
+    color: #212529;
+}
+
+.back-button:focus {
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+    outline: none;
+}
+
+.back-icon {
+    width: 20px;
+    height: 20px;
+}
+

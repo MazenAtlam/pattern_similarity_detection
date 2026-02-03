@@ -1,0 +1,157 @@
+/* Custom styles for Navbar component */
+
+/* Main navbar styles */
+.navbar-custom {
+    background-color: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid #dee2e6;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1030;
+    height: 64px;
+    transition: all 0.3s ease;
+}
+
+/* Brand logo container */
+.navbar-brand-container {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+.navbar-brand-container:hover {
+    text-decoration: none;
+}
+
+.navbar-logo {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #0d6efd 0%, #6f42c1 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(13, 110, 253, 0.25);
+    transition: all 0.3s ease;
+}
+
+.navbar-brand-container:hover .navbar-logo {
+    box-shadow: 0 4px 20px rgba(13, 110, 253, 0.4);
+}
+
+.navbar-logo-icon {
+    width: 20px;
+    height: 20px;
+    color: white;
+}
+
+.navbar-brand-text {
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: #212529;
+    margin: 0;
+}
+
+/* Navigation links */
+.nav-link-custom {
+    padding: 0.5rem 1.5rem !important;
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    color: #6c757d !important;
+    margin: 0 0.25rem;
+}
+
+.nav-link-custom:hover {
+    color: #212529 !important;
+    background-color: rgba(108, 117, 125, 0.1);
+}
+
+.nav-link-custom.active {
+    color: #0d6efd !important;
+    background-color: rgba(13, 110, 253, 0.1);
+}
+
+/* Mobile menu button */
+.navbar-toggler-custom {
+    border: none;
+    background: transparent;
+    padding: 0.5rem;
+    border-radius: 0.375rem;
+    transition: all 0.2s ease;
+}
+
+.navbar-toggler-custom:hover {
+    background-color: rgba(108, 117, 125, 0.1);
+}
+
+.navbar-toggler-custom:focus {
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+    outline: none;
+}
+
+.navbar-toggler-icon-custom {
+    width: 20px;
+    height: 20px;
+    color: #6c757d;
+}
+
+/* Mobile navigation menu */
+.mobile-nav {
+    padding: 1rem 0;
+    border-top: 1px solid #dee2e6;
+    animation: fadeIn 0.3s ease-out;
+}
+
+.mobile-nav-link {
+    display: block;
+    padding: 0.75rem 1rem;
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    color: #6c757d;
+    text-decoration: none;
+    margin: 0.25rem 0;
+}
+
+.mobile-nav-link:hover {
+    color: #212529;
+    background-color: rgba(108, 117, 125, 0.1);
+    text-decoration: none;
+}
+
+.mobile-nav-link.active {
+    color: #0d6efd;
+    background-color: rgba(13, 110, 253, 0.1);
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Responsive adjustments */
+@media (max-width: 767.98px) {
+    .navbar-brand-text {
+        display: none;
+    }
+}
+
+@media (min-width: 768px) {
+    .navbar-brand-text {
+        display: inline;
+    }
+}

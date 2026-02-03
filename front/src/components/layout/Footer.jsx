@@ -1,19 +1,20 @@
 import { Activity } from 'lucide-react';
+import '../../../styles/Footer.css';
 
 const Footer = () => {
     return (
-        <footer className="bg-card border-t border-border py-8">
-            <div className="container mx-auto px-4">
-                <div className="flex flex-col items-center gap-4">
-                    <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-accent flex items-center justify-center">
-                            <Activity className="w-4 h-4 text-primary-foreground" />
+        <footer className="footer-custom">
+            <div className="footer-content">
+                <div className="footer-inner">
+                    <div className="footer-brand">
+                        <div className="footer-logo">
+                            <Activity className="footer-logo-icon" />
                         </div>
-                        <span className="text-sm font-semibold text-foreground">
+                        <span className="footer-brand-text">
               Fourier Similarity Detector
             </span>
                     </div>
-                    <p className="text-sm text-muted-foreground text-center">
+                    <p className="footer-copyright">
                         © 2025 Fourier Similarity Detector. All rights reserved.
                     </p>
                 </div>

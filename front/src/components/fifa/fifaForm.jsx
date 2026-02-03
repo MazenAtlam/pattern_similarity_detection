@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Search, Upload, Plus, X, Users } from "lucide-react";
+import {Search, Upload, Plus, X, Users, Group} from "lucide-react";
 
 const FifaForm = ({ onSearchByMetadata, onUploadSequence, isLoading }) => {
   const [stage, setStage] = useState("");
@@ -18,6 +18,24 @@ const FifaForm = ({ onSearchByMetadata, onUploadSequence, isLoading }) => {
   ];
 
   const groups = ["A", "B", "C", "D", "E", "F", "G", "H"];
+
+  const matchs = {
+    "Group Stage": {
+      "A": ["Qatar vs Ecuador", "Senegal vs Netherlands", "Qatar vs Senegal", "Netherlands vs Ecuador", "Ecuador vs Senegal", "Netherlands vs Qatar"],
+      "B": ["England vs Iran", "United States vs Wales", "Wales vs Iran", "England vs United States", "Wales vs England", "Iran vs United States"],
+      "C": ["Argentina vs Saudi Arabia", "Mexico vs Poland", "Poland vs Saudi Arabia", "Argentina vs Mexico", "Poland vs Argentina", "Saudi Arabia vs Mexico"],
+      "D": ["Denmark vs Tunisia", "France vs Australia", "Tunisia vs Australia", "France vs Denmark", "Australia vs Denmark", "Tunisia vs France"],
+      "E": ["Germany vs Japan", "Spain vs Costa Rica", "Japan vs Costa Rica", "Spain vs Germany", "Japan vs Spain", "Costa Rica vs Germany"],
+      "F": ["Morocco vs Croatia", "Belgium vs Canada", "Belgium vs Morocco", "Croatia vs Canada", "Croatia vs Belgium", "Canada vs Morocco"],
+      "G": ["Switzerland vs Cameroon", "Brazil vs Serbia", "Cameroon vs Serbia", "Brazil vs Switzerland", "Serbia vs Switzerland", "Cameroon vs Brazil"],
+      "H": ["Uruguay vs Korea Republic", "Portugal vs Ghana", "Korea Republic vs Ghana", "Portugal vs Uruguay", "Ghana vs Uruguay", "Korea Republic vs Portugal"]
+    },
+    "Round of 16": ["Netherlands vs United States", "Argentina vs Australia", "France vs Poland", "England vs Senegal", "Japan vs Croatia", "Brazil vs Korea Republic", "Morocco vs Spain", "Portugal vs Switzerland"],
+    "Quarter-Finals": ["Croatia vs Brazil", "Netherlands vs Argentina", "Morocco vs Portugal", "England vs France"],
+    "Semi-Finals": ["Argentina vs Croatia", "France vs Morocco"],
+    "Third-Place": "Croatia vs Morocco",
+    "Final": "Argentina vs France",
+  }
 
   const handleAddPlayer = () => {
     if (playerInput.trim() && players.length < 5) {

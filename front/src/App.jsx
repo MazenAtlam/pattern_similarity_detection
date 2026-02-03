@@ -1,5 +1,5 @@
 import React from "react";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { Routes, Route } from "react-router-dom";
 import Home from "../pages/Home";
 import Fifa from "../pages/Fifa";
 import Songs from "../pages/Songs";
@@ -9,20 +9,17 @@ import "../styles/App.css";
 
 const App = () => {
   return (
-      <Router>
           <div className="app">
-              <Navbar />
 
               <main className="main-content">
                   <Routes>
                       <Route path="/" element={<Home />} />
-                      <Route path="/ft-mixer" element={<Songs />} />
-                      <Route path="/beamforming" element={<Fifa />} />
+                      <Route path="/songs" element={<Songs />} />
+                      <Route path="/fifa" element={<Fifa />} />
                   </Routes>
               </main>
               <Footer />
           </div>
-      </Router>
   );
 }
 

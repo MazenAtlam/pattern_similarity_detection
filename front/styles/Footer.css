@@ -1,0 +1,99 @@
+/* Custom styles for Footer component */
+
+/* Main footer styles */
+.footer-custom {
+    background-color: #ffffff;
+    border-top: 1px solid #e9ecef;
+    padding: 2rem 0;
+    margin-top: auto;
+}
+
+/* Footer content container */
+.footer-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1rem;
+}
+
+.footer-inner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+/* Brand section */
+.footer-brand {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.footer-logo {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background: linear-gradient(135deg, #0d6efd 0%, #6f42c1 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.footer-logo-icon {
+    width: 16px;
+    height: 16px;
+    color: white;
+}
+
+.footer-brand-text {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #212529;
+    margin: 0;
+}
+
+/* Copyright text */
+.footer-copyright {
+    font-size: 0.875rem;
+    color: #6c757d;
+    text-align: center;
+    margin: 0;
+    line-height: 1.5;
+}
+
+/* Responsive adjustments */
+@media (max-width: 576px) {
+    .footer-custom {
+        padding: 1.5rem 0;
+    }
+
+    .footer-inner {
+        gap: 1rem;
+    }
+
+    .footer-brand-text {
+        font-size: 0.8125rem;
+    }
+
+    .footer-copyright {
+        font-size: 0.8125rem;
+        padding: 0 0.5rem;
+    }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+    .footer-custom {
+        background-color: #212529;
+        border-top: 1px solid #495057;
+    }
+
+    .footer-brand-text {
+        color: #f8f9fa;
+    }
+
+    .footer-copyright {
+        color: #adb5bd;
+    }
+}

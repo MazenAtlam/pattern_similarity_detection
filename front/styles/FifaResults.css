@@ -1,0 +1,335 @@
+/* Custom styles for FifaResults component */
+
+/* Card styling */
+.fifa-results-card {
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 12px;
+    border: 1px solid #e9ecef;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    margin-bottom: 2rem;
+    overflow: hidden;
+}
+
+.card-header-custom {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-bottom: 1px solid #dee2e6;
+    padding: 1.25rem 1.5rem;
+}
+
+.card-title-custom {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #212529;
+    margin: 0;
+}
+
+.card-content-custom {
+    padding: 1.5rem;
+}
+
+/* Loading and empty states */
+.loading-state, .empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem 0;
+    gap: 1rem;
+}
+
+.loading-spinner-container {
+    width: 64px;
+    height: 64px;
+    border-radius: 16px;
+    background-color: rgba(111, 66, 193, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.loading-spinner {
+    width: 32px;
+    height: 32px;
+    border: 3px solid rgba(111, 66, 193, 0.3);
+    border-top: 3px solid #6f42c1;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.empty-icon-container {
+    width: 64px;
+    height: 64px;
+    border-radius: 16px;
+    background-color: #e9ecef;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.empty-icon {
+    width: 32px;
+    height: 32px;
+    color: #6c757d;
+}
+
+.state-message {
+    color: #6c757d;
+    text-align: center;
+    margin: 0;
+    font-size: 0.875rem;
+}
+
+/* Table styling */
+.table-container {
+    overflow-x: auto;
+}
+
+.results-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    background: white;
+}
+
+.table-header-row {
+    background-color: #f8f9fa;
+}
+
+.table-header-cell {
+    padding: 0.75rem 1rem;
+    font-weight: 600;
+    color: #495057;
+    border-bottom: 2px solid #dee2e6;
+    white-space: nowrap;
+}
+
+.table-row {
+    transition: background-color 0.2s ease;
+    cursor: pointer;
+}
+
+.table-row:hover {
+    background-color: rgba(108, 117, 125, 0.05);
+}
+
+.table-row.selected {
+    background-color: rgba(13, 110, 253, 0.1);
+}
+
+.table-row.selected:hover {
+    background-color: rgba(13, 110, 253, 0.15);
+}
+
+.table-cell {
+    padding: 1rem;
+    border-bottom: 1px solid #e9ecef;
+    vertical-align: middle;
+}
+
+.table-cell:first-child {
+    font-weight: 500;
+    color: #6c757d;
+    text-align: center;
+    width: 48px;
+}
+
+/* Match info */
+.match-info {
+    min-width: 200px;
+}
+
+.match-teams {
+    font-weight: 500;
+    color: #212529;
+    margin: 0 0 0.25rem 0;
+    line-height: 1.2;
+}
+
+.match-date {
+    font-size: 0.75rem;
+    color: #6c757d;
+    margin: 0;
+}
+
+/* Stage info */
+.stage-info {
+    color: #6c757d;
+    font-size: 0.875rem;
+}
+
+/* Similarity */
+.similarity-container {
+    min-width: 120px;
+}
+
+.similarity-value {
+    font-size: 0.875rem;
+    font-weight: 700;
+    margin-bottom: 0.25rem;
+    display: block;
+}
+
+.similarity-value.high {
+    color: #198754;
+}
+
+.similarity-value.medium {
+    color: #ffc107;
+}
+
+.similarity-value.low {
+    color: #6c757d;
+}
+
+/* Progress bar */
+.progress-bar-custom {
+    height: 6px;
+    background-color: #e9ecef;
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    border-radius: 3px;
+    background-color: #0d6efd;
+    transition: width 0.3s ease;
+}
+
+.progress-fill.high {
+    background-color: #198754;
+}
+
+.progress-fill.medium {
+    background-color: #ffc107;
+}
+
+.progress-fill.low {
+    background-color: #6c757d;
+}
+
+/* Sequence flow */
+.sequence-flow {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    flex-wrap: nowrap;
+    min-width: 200px;
+    overflow: hidden;
+}
+
+.player-name {
+    font-size: 0.75rem;
+    color: #6c757d;
+    white-space: nowrap;
+}
+
+.sequence-arrow {
+    width: 12px;
+    height: 12px;
+    color: #0d6efd;
+    flex-shrink: 0;
+}
+
+.ellipsis {
+    color: #6c757d;
+    font-size: 0.75rem;
+}
+
+/* Pagination */
+.pagination-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    margin-top: 1.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid #e9ecef;
+}
+
+.pagination-buttons {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.pagination-button {
+    background-color: transparent;
+    border: 1px solid #dee2e6;
+    color: #6c757d;
+    padding: 0.375rem 0.75rem;
+    font-size: 0.875rem;
+    border-radius: 0.375rem;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    cursor: pointer;
+}
+
+.pagination-button:hover:not(:disabled) {
+    background-color: #f8f9fa;
+    color: #212529;
+    border-color: #adb5bd;
+}
+
+.pagination-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.page-number {
+    font-weight: 500;
+    color: #212529;
+    min-width: 2rem;
+    text-align: center;
+    font-size: 0.875rem;
+}
+
+.pagination-info {
+    font-size: 0.75rem;
+    color: #6c757d;
+    margin: 0;
+}
+
+/* Responsive adjustments */
+@media (max-width: 991.98px) {
+    .sequence-flow {
+        display: none;
+    }
+}
+
+@media (max-width: 767.98px) {
+    .card-header-custom {
+        padding: 1rem;
+    }
+
+    .card-content-custom {
+        padding: 1rem;
+    }
+
+    .table-cell {
+        padding: 0.75rem 0.5rem;
+    }
+
+    .match-info {
+        min-width: 150px;
+    }
+}
+
+@media (max-width: 575.98px) {
+    .pagination-buttons {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .pagination-button {
+        width: 100%;
+        justify-content: center;
+    }
+}
