@@ -189,6 +189,7 @@ const FifaForm = ({ isLoading, onSearchSuccess, onReset, onSearchStart }) => {
       try {
         // Fetch count
         const response = await getSequenceCount(sequencePath, selectedMatch);
+        console.log(response);
         if (response && typeof response.sequences_count === 'number') {
           setMaxSeqIndex(response.sequences_count);
           setSequenceIndex(0); // Reset index

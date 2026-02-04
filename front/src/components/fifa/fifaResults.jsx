@@ -22,9 +22,9 @@ const FifaResults = ({ results, selectedResult, onSelectResult, isLoading }) => 
   const getSimilarityColor = (similarity) => {
     // similarity is 0-1 range based on backed (1/1+dist)
     const percentage = similarity * 100;
-    if (percentage >= 80) return 'text-green-500';
-    if (percentage >= 60) return 'text-yellow-500';
-    return 'text-red-500';
+    if (percentage >= 80) return 'text-success';
+    if (percentage >= 60) return 'text-warning';
+    return 'text-danger';
   };
 
   if (isLoading) {
@@ -47,33 +47,35 @@ const FifaResults = ({ results, selectedResult, onSelectResult, isLoading }) => 
   }
 
   return (
-    <div className="card glass-card p-6 mt-6">
+    <div className="card glass-card">
       <div className="card-header">
-        <h5 className="card-title text-xl font-bold mb-4">Matching Sequences</h5>
+        <h5 className="card-title mb-0">Matching Sequences</h5>
       </div>
       <div className="card-body">
-        <div className="overflow-x-auto">
-          <table className="table w-full text-left border-collapse">
+        <div className="table-responsive">
+          <table className="table table-hover align-middle">
             <thead>
-              <tr className="border-b border-gray-700">
-                <th className="p-3">Index</th>
-                <th className="p-3">Sequence Start Time</th>
-                <th className="p-3">Similarity Measure</th>
+              <tr>
+                <th style={{ width: "60px" }}>Index</th>
+                <th>Sequence Start Time</th>
+                <th>Similarity Measure</th>
               </tr>
             </thead>
             <tbody>
               {paginatedResults.map((result, index) => {
                 const globalIndex = (currentPage - 1) * itemsPerPage + index + 1;
+                const isSelected = selectedResult === result;
                 return (
                   <tr
                     key={index}
-                    className={`border-b border-gray-800 hover:bg-white/5 cursor-pointer transition-colors ${selectedResult === result ? 'bg-blue-500/20 border-l-4 border-l-blue-500' : ''}`}
                     onClick={() => onSelectResult && onSelectResult(result)}
+                    style={{ cursor: 'pointer' }}
+                    className={isSelected ? "table-active border-start border-4 border-primary" : ""}
                   >
-                    <td className="p-3 font-mono text-gray-400">#{globalIndex}</td>
-                    <td className="p-3">{result.sequence_start_time}</td>
-                    <td className="p-3">
-                      <span className={`font-bold ${getSimilarityColor(result.similarity_measure)}`}>
+                    <td className="fw-medium text-muted">#{globalIndex}</td>
+                    <td>{result.sequence_start_time}</td>
+                    <td>
+                      <span className={`fw-bold ${getSimilarityColor(result.similarity_measure)}`}>
                         {result.similarity_measure.toFixed(4)}
                       </span>
                     </td>
@@ -84,34 +86,33 @@ const FifaResults = ({ results, selectedResult, onSelectResult, isLoading }) => 
           </table>
         </div>
 
-        {/* Pagination: "Previous < X > Next" */}
+        {/* Pagination from SongResults */}
         {totalPages > 1 && (
-          <div className="flex justify-center items-center gap-4 mt-6">
-            <span className="text-sm text-gray-500 font-medium uppercase tracking-wider">Previous</span>
-
-            <button
-              type="button"
-              className="p-1 rounded hover:bg-white/10 disabled:opacity-30 transition-colors"
-              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-              disabled={currentPage === 1}
-            >
-              <ChevronLeft className="w-5 h-5" />
-            </button>
-
-            <span className="font-bold text-lg min-w-[20px] text-center">
-              {currentPage}
-            </span>
-
-            <button
-              type="button"
-              className="p-1 rounded hover:bg-white/10 disabled:opacity-30 transition-colors"
-              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-              disabled={currentPage === totalPages}
-            >
-              <ChevronRight className="w-5 h-5" />
-            </button>
-
-            <span className="text-sm text-gray-500 font-medium uppercase tracking-wider">Next</span>
+          <div className="d-flex flex-column align-items-center gap-3 mt-4 pt-3 border-top">
+            <div className="d-flex align-items-center gap-2">
+              <button
+                className="btn btn-outline-secondary btn-sm"
+                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+              >
+                <ChevronLeft style={{ width: "16px", height: "16px" }} />
+                Previous
+              </button>
+              <span className="fw-medium px-3">{currentPage}</span>
+              <button
+                className="btn btn-outline-secondary btn-sm"
+                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                disabled={currentPage === totalPages}
+              >
+                Next
+                <ChevronRight style={{ width: "16px", height: "16px" }} />
+              </button>
+            </div>
+            <p className="text-muted small mb-0">
+              Showing {(currentPage - 1) * itemsPerPage + 1} to{" "}
+              {Math.min(currentPage * itemsPerPage, sortedResults.length)} of{" "}
+              {sortedResults.length} results
+            </p>
           </div>
         )}
       </div>

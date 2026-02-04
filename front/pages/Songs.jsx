@@ -63,6 +63,7 @@ const Songs = () => {
       // Use real API
       response = await detectSong(file);
 
+      console.log(response);
       if (response.status === "success") {
         // Map API response to component format
         const mappedResults = response.results.map((song, index) => ({
@@ -70,7 +71,7 @@ const Songs = () => {
           songName: song.song_name,
           artist: song.artist,
           album: "", // API doesn't provide album info
-          similarityIndex: Math.round(song.similarity_index * 100), // Convert to percentage
+          similarityIndex: Math.round(song.similarity_index),
           fileUrl: song.file_url,
         }));
 
