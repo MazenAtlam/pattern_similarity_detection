@@ -1,12 +1,10 @@
-import { useState } from 'react';
-// Corrected imports assuming the file is resolved within the src context
-import Layout from '../src/components/layout/Layout';
-import FifaForm from '../src/components/fifa/fifaForm';
-import FifaResults from '../src/components/fifa/fifaResults';
-import FootballPitch from '../src/components/fifa/footballPitch';
-import PositionCharts from '../src/components/fifa/positionCharts';
-import { detectPassSequence } from '../src/utils/api';
-import '../styles/Fifa.css';
+import { useState } from "react";
+import Layout from "../src/components/layout/Layout";
+import FifaForm from "../src/components/fifa/fifaForm";
+import FifaResults from "../src/components/fifa/fifaResults";
+import FootballPitch from "../src/components/fifa/FootballPitch";
+import PositionCharts from "../src/components/fifa/PositionCharts";
+import "../styles/Fifa.css";
 
 const Fifa = () => {
   const [results, setResults] = useState([]);
@@ -136,42 +134,31 @@ const Fifa = () => {
                     isLoading={isLoading}
                 />
               </div>
+            )}
 
-              {/* Matching Sequences */}
-              {results.length > 0 && (
-                  <div className="results-section">
-                    <FifaResults
-                        results={results}
-                        selectedResult={selectedResult}
-                        onSelectResult={setSelectedResult}
-                        isLoading={isLoading}
-                    />
-                  </div>
-              )}
+            {/* Football Pitch */}
+            {(inputSequence || selectedResult) && (
+              <div className="pitch-section">
+                <FootballPitch
+                  inputSequence={inputSequence}
+                  selectedResult={selectedResult}
+                />
+              </div>
+            )}
 
-              {/* Football Pitch */}
-              {(inputSequence || selectedResult) && (
-                  <div className="pitch-section">
-                    <FootballPitch
-                        inputSequence={inputSequence}
-                        selectedResult={selectedResult}
-                    />
-                  </div>
-              )}
-
-              {/* Position Charts - Full Width */}
-              {(inputSequence || selectedResult) && (
-                  <div className="charts-section">
-                    <PositionCharts
-                        inputSequence={inputSequence}
-                        selectedResult={selectedResult}
-                    />
-                  </div>
-              )}
-            </div>
+            {/* Position Charts - Full Width */}
+            {(inputSequence || selectedResult) && (
+              <div className="charts-section">
+                <PositionCharts
+                  inputSequence={inputSequence}
+                  selectedResult={selectedResult}
+                />
+              </div>
+            )}
           </div>
         </div>
-      </Layout>
+      </div>
+    </Layout>
   );
 };
 

@@ -24,11 +24,15 @@ os.makedirs(SONGS_DB_FOLDER, exist_ok=True)
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
+from api.services.audio_processor_v1 import AudioProcessorV1
+from api.services.audio_processor_v2 import AudioProcessorV2
+from api.services.audio_processor_v3 import AudioProcessorV3
+
 @songs_bp.route('/detect', methods=['POST'])
 def detect_song():
     """
-    Receives an audio file (key: 'audio_data'), saves it, 
-    and compares it against all songs in data/songs/.
+    Receives an audio file (key: 'audio_data') and 'version' parameter.
+    Saves file, compares using selected algorithm.
     """
     # 1. specific check for the file part
     if 'audio_data' not in request.files:
@@ -46,18 +50,32 @@ def detect_song():
         file.save(filepath)
         
         try:
+            # CHECK VERSION
+            version = request.form.get('version', 'v0') # Default too v0
+            
+            if version == 'v1':
+                current_processor = AudioProcessorV1()
+                print("DEBUG: Using AudioProcessorV1 (Pitch Contour)")
+            elif version == 'v2':
+                current_processor = AudioProcessorV2()
+                print("DEBUG: Using AudioProcessorV2 (Fast Spectrogram Pitch)")
+            elif version == 'v3':
+                current_processor = AudioProcessorV3()
+                print("DEBUG: Using AudioProcessorV3 (Smart Fast Pitch - HPSS)")
+            else:
+                current_processor = processor # Default loaded instance
+                print("DEBUG: Using AudioProcessor (Chroma CENS)")
+
             # 2. Load the user's 'humming'
-            user_signal = processor.load_audio(filepath)
+            user_signal = current_processor.load_audio(filepath)
             
             results = []
             
             # 3. Check if we have any reference songs to compare against
-            print(f"DEBUG: Searching for songs in: {SONGS_DB_FOLDER}") # <--- Add this line
+            print(f"DEBUG: Searching for songs in: {SONGS_DB_FOLDER}")
             reference_songs = [f for f in os.listdir(SONGS_DB_FOLDER) if allowed_file(f)]
-            print(f"DEBUG: Found songs: {reference_songs}") 
             
             if not reference_songs:
-                # If no songs in DB, return a helpful message
                 os.remove(filepath)
                 return jsonify({
                     "status": "success", 
@@ -70,15 +88,14 @@ def detect_song():
                 song_path = os.path.join(SONGS_DB_FOLDER, song_file)
                 
                 # Load reference song
-                # (Note: In a real production app, we would cache these features to avoid re-loading)
-                db_signal = processor.load_audio(song_path)
+                db_signal = current_processor.load_audio(song_path)
                 
                 # Calculate Similarity
-                similarity = processor.compare_audio(user_signal, db_signal)
+                similarity = current_processor.compare_audio(user_signal, db_signal)
                 
                 results.append({
                     "song_name": song_file,
-                    "artist": "Unknown", # We'd need a metadata DB for this
+                    "artist": "Unknown", 
                     "similarity_index": similarity,
                     "file_url": f"/static/songs/{song_file}" 
                 })
@@ -92,13 +109,16 @@ def detect_song():
             return jsonify({
                 "status": "success",
                 "matched_songs_found": len(results),
-                "results": results[:5]  # Return top 5
+                "results": results[:10]  # Return top 10
             }), 200
             
         except Exception as e:
             # Cleanup on error
             if os.path.exists(filepath):
                 os.remove(filepath)
+            print(f"ERROR: {e}")
+            import traceback
+            traceback.print_exc()
             return jsonify({"status": "failed", "error": str(e)}), 500
     
     return jsonify({"status": "failed", "error": "Invalid file type"}), 400
