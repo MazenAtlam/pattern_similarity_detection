@@ -9,7 +9,11 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from pattern_matcher_v3 import FingerprintDatabaseV3
 
+from flask_cors import CORS
+
 app = Flask(__name__)
+# Enable CORS for all routes and origins
+CORS(app, resources={r"/*": {"origins": "*"}})
 
 # Initialize DB (pointing to shared V3 data)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -46,7 +50,8 @@ def detect_pass_sequences():
         seq_path = data['sequence_path']
         n_passes = data.get('number_of_passes', 1)
         play_idx = data.get('current_play_index', 0)
-        
+        match_id_req = data.get('match_id')
+
         # Check file
         if not os.path.exists(seq_path):
              return jsonify({
@@ -54,27 +59,41 @@ def detect_pass_sequences():
                  "error": f"File not found: {seq_path}"
              }), 404
              
-        # Load the sequence data
-        with open(seq_path, 'rb') as f:
-            loaded_data = pickle.load(f)
-            
-        # Handle List vs Single Object
-        query_sequence = None
-        if isinstance(loaded_data, list):
-            if 0 <= play_idx < len(loaded_data):
-                query_sequence = loaded_data[play_idx]
-            else:
-                 return jsonify({
-                    "status": "failed",
-                    "error": f"Index {play_idx} out of bounds (Size: {len(loaded_data)})"
-                 }), 400
-        else:
-            # Assume it's the object itself if not a list
-            query_sequence = loaded_data
-            
         # Ensure correct DB level is loaded
         if db.current_length != n_passes:
             db.load_level(n_passes)
+            
+        # Filter plays for this match
+        # We assume db.database holds all plays for the current level (n_passes)
+        if not match_id_req:
+             # Fallback or error if match_id is mandatory? 
+             # For backward compatibility maybe try to infer, but user explicitly said "request body has the match id"
+             # Let's assume it's mandatory or we create an error.
+             # Or if missing, maybe we just use the play_idx on the whole DB? 
+             # Let's enforce match_id for correctness as per user intent.
+             return jsonify({"status": "failed", "error": "Missing match_id in request"}), 400
+
+        current_match_plays = [
+            p for p in db.database
+            if str(p['game_id']) == str(match_id_req)
+        ]
+        
+        # Sort by timestamp to ensure consistent indexing
+        current_match_plays.sort(key=lambda x: x['timestamp'])
+
+        if not current_match_plays:
+             return jsonify({
+                "status": "failed",
+                "error": f"No sequences found for match {match_id_req}"
+            }), 404
+
+        if 0 <= play_idx < len(current_match_plays):
+            query_sequence = current_match_plays[play_idx]
+        else:
+             return jsonify({
+                "status": "failed",
+                "error": f"Index {play_idx} out of bounds (Size: {len(current_match_plays)})"
+             }), 400
             
         # Search
         results = db.find_nearest_neighbors(query_sequence, top_k=5)
@@ -103,10 +122,7 @@ def detect_pass_sequences():
                 events_formatted.append({"x": round(float(curr_x), 2), "y": round(float(curr_y), 2)})
             
             formatted_results.append({
-                "similarity_measure": round(1.0 / (1.0 + float(r['distance'])), 4), # Normalized Score? Or just distance?
-                # User example showed 0.94. I'll stick to a normalized score format: 1/(1+dist).
-                # If they want raw distance, I can swap. 
-                # Let's match the "0.94" vibe.
+                "similarity_measure": round(1.0 / (1.0 + float(r['distance'])), 4), 
                 "sequence_start_time": seconds_to_mm_ss(entry['timestamp']),
                 "sequence_events": events_formatted
             })
@@ -131,21 +147,29 @@ def get_sequence_count():
              return jsonify({"status": "failed", "error": "Missing sequence_path"}), 400
              
         seq_path = data['sequence_path']
+        match_id = data.get('match_id')
+
         if not os.path.exists(seq_path):
              return jsonify({"status": "failed", "error": f"File not found: {seq_path}"}), 404
              
-        # Load pickle to get Match ID and Length
-        with open(seq_path, 'rb') as f:
-            content = pickle.load(f)
-            
-        # Handle list or dict
-        query = content[0] if isinstance(content, list) else content
-        
-        match_id = query.get('game_id')
-        length = query.get('length', 1)
-        
         if not match_id:
-            return jsonify({"status": "failed", "error": "Could not determine match_id from file"}), 400
+            return jsonify({"status": "failed", "error": "Missing match_id"}), 400
+            
+        # Infer length from filename (e.g. fingerprints_3pass.pkl)
+        # Assuming format ends with "{number}pass.pkl"
+        filename = os.path.basename(seq_path)
+        import re
+        match = re.search(r'(\d+)pass\.pkl$', filename)
+        if match:
+             length = int(match.group(1))
+        else:
+             # Fallback: maybe we assume default 1? or try to load?
+             # Let's try to extract digits from filename if strict regex fails
+             digits = re.findall(r'\d+', filename)
+             if digits:
+                 length = int(digits[-1]) # Take the last number likely to be the pass count
+             else:
+                 return jsonify({"status": "failed", "error": "Could not determine pass length from filename"}), 400
              
         # Load DB level
         if db.current_length != length:

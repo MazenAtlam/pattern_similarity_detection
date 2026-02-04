@@ -29,7 +29,7 @@ export const detectSong = async (audioFile) => {
   try {
     // Convert audio file to base64
     const base64Audio = await blobToBase64(audioFile);
-    
+
     // Determine audio format from MIME type
     let audioFormat;
     if (audioFile.type.includes('wav')) {
@@ -89,31 +89,37 @@ export const detectPassSequence = async (payload) => {
       const errorData = await response.json().catch(() => ({}));
       throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
     }
-};
+
+    return await response.json();
+  } catch (error) {
+    console.error('API Error (Count):', error);
+    throw error;
+  }
+}
 
 /**
  * Sends a request to count the number of sequences in a specific file.
  * @param {string} sequencePath - The path to the sequence file.
  * @returns {Promise<Object>} - The JSON response containing sequence_count.
  */
-export const getSequenceCount = async (sequencePath) => {
-    try {
-        const response = await fetch(`${API_BASE_URL}/pass_sequences/count`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ sequence_path: sequencePath }),
-        });
+export const getSequenceCount = async (sequencePath, selectedMatch) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/pass_sequences/count`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ sequence_path: sequencePath, match_id: selectedMatch }),
+    });
 
-        if (!response.ok) {
-            const errorData = await response.json().catch(() => ({}));
-            throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
-        }
-
-        return await response.json();
-    } catch (error) {
-        console.error('API Error (Count):', error);
-        throw error;
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
     }
+
+    return await response.json();
+  } catch (error) {
+    console.error('API Error (Count):', error);
+    throw error;
+  }
 };

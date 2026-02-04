@@ -3,7 +3,6 @@ import Layout from "../src/components/layout/Layout";
 import FifaForm from "../src/components/fifa/fifaForm";
 import FifaResults from "../src/components/fifa/fifaResults";
 import FootballPitch from "../src/components/fifa/FootballPitch";
-import PositionCharts from "../src/components/fifa/PositionCharts";
 import "../styles/Fifa.css";
 
 const Fifa = () => {
@@ -22,7 +21,9 @@ const Fifa = () => {
       teams: item.match_name || "Unknown Match", // Fallback if not provided
       date: item.match_date || "Unknown Date", // Fallback
       stage: item.match_stage || "Unknown Stage", // Fallback
-      similarityIndex: (item.similarity_measure || 0) * 100, // Convert 0-1 to 0-100%
+      similarityIndex: (item.similarity_measure || 0) * 100, // Keep for legacy if needed
+      similarity_measure: item.similarity_measure || 0, // Raw measure for table
+      sequence_start_time: item.sequence_start_time || "00:00",
       sequenceFlow: item.player_sequence || ["Player A", "Player B", "Player C"], // Mock if missing
       matchCoordinates: item.sequence_events ? item.sequence_events.map((evt, i) => ({
         time: i, // Mock time steps if not provided
@@ -32,126 +33,97 @@ const Fifa = () => {
     }));
   };
 
-  const handleSearchByMetadata = async (data) => {
+  const handleSearchStart = () => {
     setIsLoading(true);
     setError(null);
-    setSelectedResult(null);
-
-    try {
-      // Constructing payload based on form data
-      const payload = {
-        stage: data.stage,
-        group: data.group,
-        date: data.date,
-        match: data.match,
-        players: data.players
-      };
-
-      const response = await detectPassSequence(payload);
-
-      if (response.status === 'success' && response.pass_sequences_data) {
-        const mappedResults = mapApiResults(response);
-        setResults(mappedResults);
-
-        // Set input sequence for visualization (Mocking input coordinates for demo)
-        const mockInputCoords = data.players.map((_, i) => ({
-          time: i,
-          x: 50 + Math.random() * 20 - 10,
-          y: 50 + Math.random() * 20 - 10
-        }));
-        setInputSequence(mockInputCoords);
-
-      } else {
-        setResults([]);
-        setInputSequence(null);
-        setError(response.error || 'No matching sequences found.');
-      }
-    } catch (err) {
-      setError(err.message || 'Failed to search sequences. Please try again.');
-      setResults([]);
-    } finally {
-      setIsLoading(false);
-    }
   };
 
-  const handleUploadSequence = async () => {
-    setIsLoading(true);
-    setError(null);
+  const handleReset = () => {
+    setResults([]);
+    setInputSequence(null);
     setSelectedResult(null);
+    setError(null);
+    // Do NOT set isLoading to false here if it was caused by reset, but slider change implies user interaction which stops any previous flow or just resets view.
+    // Actually, if we reset, we want the cards to disappear.
+    // So results=[] means cards defined by "results.length > 0" will disappear.
+  };
 
-    try {
-      // Using the example payload from the prompt
-      const payload = {
-        sequence_path: "/data/2022/final/arg_fra_seq_002.pkl"
-      };
+  const handleSearchSuccess = (response) => {
+    setIsLoading(false); // Stop loading
+    if (!response) return;
 
-      const response = await detectPassSequence(payload);
+    // 1. Map and set matching results
+    const mappedResults = mapApiResults(response);
+    setResults(mappedResults);
 
-      if (response.status === 'success' && response.pass_sequences_data) {
-        const mappedResults = mapApiResults(response);
-        setResults(mappedResults);
-
-        // Use the first result's coordinates as a mock input for visualization demonstration
-        if (mappedResults.length > 0) {
-          setInputSequence(mappedResults[0].matchCoordinates.map(p => ({...p, x: p.x + 5, y: p.y - 5})));
-        }
-      } else {
-        setError(response.error || 'Could not analyze the sequence.');
-      }
-    } catch (err) {
-      setError(err.message || 'Failed to upload/analyze sequence.');
-    } finally {
-      setIsLoading(false);
+    // 2. Set input sequence from backend response
+    if (response.query_sequence_events) {
+      const inputCoords = response.query_sequence_events.map((evt, i) => ({
+        time: i,
+        x: evt.x,
+        y: evt.y
+      }));
+      setInputSequence(inputCoords);
+    } else {
+      setInputSequence(null);
     }
   };
 
   return (
-      <Layout
-          pageTitle="FIFA World Cup 2022 Sequence Detector"
-          pageDescription="Analyze and compare pass sequences from the World Cup"
-      >
-        <div className="fifa-container">
-          <div className="container">
-            {/* Loading Overlay */}
-            {isLoading && (
-                <div className="loading-overlay">
-                  <div className="loading-spinner"></div>
-                </div>
-            )}
+    <Layout
+      pageName="fifa"
+      pageTitle="FIFA World Cup 2022 Sequence Detector"
+      pageDescription="Analyze and compare pass sequences from the World Cup"
+    >
+      <div className="fifa-container">
+        <div className="container">
+          {/* Loading Overlay - REMOVE global overlay since we want in-card loading */}
+          {/* 
+          {isLoading && (
+            <div className="loading-overlay">
+              <div className="loading-spinner"></div>
+            </div>
+          )} 
+          */}
 
-            {/* Error Toast / Alert Placeholder */}
-            {error && (
-                <div className="alert alert-danger mb-4 mx-3 mx-lg-0" role="alert">
-                  {error}
-                </div>
-            )}
+          {/* Error Toast / Alert Placeholder */}
+          {error && (
+            <div className="alert alert-danger mb-4 mx-3 mx-lg-0" role="alert">
+              {error}
+            </div>
+          )}
 
-            {/* Content */}
-            <div>
-              {/* Input Form - Full Width */}
-              <div className="form-section">
-                <FifaForm
-                    isLoading={isLoading}
+          {/* Content */}
+          <div>
+            {/* Input Form - Full Width */}
+            <div className="form-section">
+              <FifaForm
+                isLoading={isLoading}
+                onSearchSuccess={handleSearchSuccess}
+                onSearchStart={handleSearchStart}
+                onReset={handleReset}
+              />
+            </div>
+
+            {/* Results Section - Show if results exist OR if Loading (to show spinner inside) */}
+            {(isLoading || (results && results.length > 0)) && (
+              <div className="results-section mb-6">
+                <FifaResults
+                  results={results}
+                  selectedResult={selectedResult}
+                  onSelectResult={setSelectedResult}
+                  isLoading={isLoading}
                 />
               </div>
             )}
 
-            {/* Football Pitch */}
-            {(inputSequence || selectedResult) && (
+            {/* Football Pitch - Show if (Input OR Result) Exists OR Loading */}
+            {(isLoading || inputSequence || selectedResult) && (
               <div className="pitch-section">
                 <FootballPitch
                   inputSequence={inputSequence}
                   selectedResult={selectedResult}
-                />
-              </div>
-            )}
-
-            {/* Position Charts - Full Width */}
-            {(inputSequence || selectedResult) && (
-              <div className="charts-section">
-                <PositionCharts
-                  inputSequence={inputSequence}
-                  selectedResult={selectedResult}
+                  isLoading={isLoading}
                 />
               </div>
             )}

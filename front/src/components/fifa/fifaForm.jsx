@@ -106,7 +106,7 @@ const matchs = {
   ]
 };
 
-const FifaForm = ({ isLoading }) => {
+const FifaForm = ({ isLoading, onSearchSuccess, onReset, onSearchStart }) => {
   // UI State
   const [selectedStage, setSelectedStage] = useState('');
   const [selectedGroup, setSelectedGroup] = useState('');
@@ -127,6 +127,7 @@ const FifaForm = ({ isLoading }) => {
     const newStage = e.target.value;
     setSelectedStage(newStage);
     setSelectedMatch(''); // Reset match when stage changes
+    if (onReset) onReset(); // Clear results
     // If not group stage, reset group
     if (newStage !== 'Group Stage') {
       setSelectedGroup('');
@@ -137,6 +138,7 @@ const FifaForm = ({ isLoading }) => {
   const handleGroupChange = (e) => {
     setSelectedGroup(e.target.value);
     setSelectedMatch(''); // Reset match when group changes
+    if (onReset) onReset(); // Clear results
   };
 
   // Helper: Get available matches based on selection
@@ -154,15 +156,15 @@ const FifaForm = ({ isLoading }) => {
   // 3. Handle Match & NumPasses Change -> Update Sequence Path
   const updateSequencePath = (matchId, passes) => {
     if (!matchId) return;
-    const baseFolder = '/data';
-    // Format: "{baseFolder}/{matchID}/fingerprints{numberOfPasses}pass.pkl"
-    const path = `${baseFolder}/${matchId}/fingerprints${passes}pass.pkl`;
+    const baseFolder = 'data/fifa';
+    const path = `${baseFolder}/fingerprints_${passes}pass.pkl`;
     setSequencePath(path);
   };
 
   const handleMatchChange = (e) => {
     const matchId = e.target.value;
     setSelectedMatch(matchId);
+    if (onReset) onReset(); // Clear results
     updateSequencePath(matchId, numPasses);
   };
 
@@ -170,6 +172,7 @@ const FifaForm = ({ isLoading }) => {
     // Only update UI state, do not trigger fetch
     const passes = parseInt(e.target.value, 10);
     setNumPasses(passes);
+    if (onReset) onReset(); // Reset results immediately on change
   };
 
   const handleNumPassesCommit = () => {
@@ -185,7 +188,7 @@ const FifaForm = ({ isLoading }) => {
       setIsCountLoading(true);
       try {
         // Fetch count
-        const response = await getSequenceCount(sequencePath);
+        const response = await getSequenceCount(sequencePath, selectedMatch);
         if (response && typeof response.sequences_count === 'number') {
           setMaxSeqIndex(response.sequences_count);
           setSequenceIndex(0); // Reset index
@@ -202,135 +205,145 @@ const FifaForm = ({ isLoading }) => {
     };
 
     fetchCount();
-  }, [sequencePath]);
+  }, [sequencePath, selectedMatch]);
 
   // 5. Handle Sequence Index Change (onRelease)
   const handleSeqIndexChange = (e) => {
     setSequenceIndex(parseInt(e.target.value, 10));
+    if (onReset) onReset(); // Reset results immediately on change
   };
 
   const handleSeqIndexCommit = async () => {
     // Trigger detection API
     try {
+      if (onSearchStart) onSearchStart();
       console.log(`Detecting sequence: Path=${sequencePath}, Index=${sequenceIndex}`);
-      await detectPassSequence({
+      const response = await detectPassSequence({
         sequence_path: sequencePath,
+        match_id: selectedMatch,
         sequence_index: sequenceIndex
       });
-      // Ignore response as per instructions
+      console.log(response);
+      if (response && response.status === 'success') {
+        if (onSearchSuccess) {
+          onSearchSuccess(response);
+        }
+      }
     } catch (error) {
       console.error("Error triggering detection:", error);
     }
   };
 
   return (
-      <div className="card glass-card p-6">
-        <div className="card-header">
-          <h5 className="card-title text-xl font-bold mb-4 flex items-center gap-2">
-            <Search
-                style={{ width: "20px", height: "20px", color: "var(--primary)" }}
-            />
-            Search Match Sequences
-          </h5>
+    <div className="card glass-card p-6">
+      <div className="card-header">
+        <h5 className="card-title text-xl font-bold mb-4 flex items-center gap-2">
+          <Search
+            style={{ width: "20px", height: "20px", color: "var(--primary)" }}
+          />
+          Search Match Sequences
+        </h5>
 
-          <div className="card-body grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
-            <div className="row g-3 mb-4 w-full">
-              {/* Stage Selection */}
-              <div className="col-md-8 col-lg-4">
-                <label className="form-label block text-sm font-medium mb-1">Stage</label>
-                <select
-                    value={selectedStage}
-                    onChange={handleStageChange}
-                    className="form-select bg-light w-full"
-                >
-                  <option value="">Select Stage</option>
-                  {stages.map(stage => (
-                      <option key={stage} value={stage}>{stage}</option>
-                  ))}
-                </select>
-              </div>
+        <div className="card-body grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+          <div className="row g-3 mb-4 w-full">
+            {/* Stage Selection */}
+            <div className="col-md-8 col-lg-4">
+              <label className="form-label block text-sm font-medium mb-1">Stage</label>
+              <select
+                value={selectedStage}
+                onChange={handleStageChange}
+                className="form-select bg-light w-full"
+              >
+                <option value="">Select Stage</option>
+                {stages.map(stage => (
+                  <option key={stage} value={stage}>{stage}</option>
+                ))}
+              </select>
+            </div>
 
-              {/* Group Selection */}
-              <div className="col-md-8 col-lg-4">
-                <label className={`form-label block text-sm font-medium mb-1 ${!isGroupStage ? 'text-gray-500' : ''}`}>
-                  Group
-                </label>
-                <select
-                    value={selectedGroup}
-                    onChange={handleGroupChange}
-                    disabled={!isGroupStage}
-                    className="form-select bg-light w-full"
-                >
-                  <option value="">Select Group</option>
-                  {groups.map(group => (
-                      <option key={group} value={group}>Group {group}</option>
-                  ))}
-                </select>
-              </div>
+            {/* Group Selection */}
+            <div className="col-md-8 col-lg-4">
+              <label className={`form-label block text-sm font-medium mb-1 ${!isGroupStage ? 'text-gray-500' : ''}`}>
+                Group
+              </label>
+              <select
+                value={selectedGroup}
+                onChange={handleGroupChange}
+                disabled={!isGroupStage}
+                className="form-select bg-light w-full"
+              >
+                <option value="">Select Group</option>
+                {groups.map(group => (
+                  <option key={group} value={group}>Group {group}</option>
+                ))}
+              </select>
+            </div>
 
-              {/* Match Selection */}
-              <div className="col-md-8 col-lg-4">
-                <label className="form-label block text-sm font-medium mb-1">Match</label>
-                <select
-                    value={selectedMatch}
-                    onChange={handleMatchChange}
-                    disabled={!selectedStage || (isGroupStage && !selectedGroup)}
-                    className="form-select bg-light w-full"
-                >
-                  <option value="">Select Match</option>
-                  {getMatchOptions().map(([label, id]) => (
-                      <option key={id} value={id}>{label}</option>
-                  ))}
-                </select>
-              </div>
+            {/* Match Selection */}
+            <div className="col-md-8 col-lg-4">
+              <label className="form-label block text-sm font-medium mb-1">Match</label>
+              <select
+                value={selectedMatch}
+                onChange={handleMatchChange}
+                disabled={!selectedStage || (isGroupStage && !selectedGroup)}
+                className="form-select bg-light w-full"
+              >
+                <option value="">Select Match</option>
+                {getMatchOptions().map(([label, id]) => (
+                  <option key={id} value={id}>{label}</option>
+                ))}
+              </select>
             </div>
           </div>
+        </div>
 
-          <div className={`grid grid-cols-1 ${maxSeqIndex > 0 ? 'md:grid-cols-2' : ''} gap-8 mb-6`}>
-            {/* Number of Passes Slider */}
-            <div className="form-group">
+        <div className={`grid grid-cols-1 ${maxSeqIndex > 0 ? 'md:grid-cols-2' : ''} gap-8 mb-6`}>
+          {/* Number of Passes Slider */}
+          <div className="form-group">
+            <label className="block text-sm font-medium mb-2">
+              Number of Passes: <span className="text-blue-400 font-bold">{numPasses}</span>
+            </label>
+            <input
+              type="range"
+              min="1"
+              max="10"
+              value={numPasses}
+              onChange={handleNumPassesChange}
+              onMouseUp={handleNumPassesCommit}
+              onTouchEnd={handleNumPassesCommit}
+              className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer"
+            />
+          </div>
+
+          {/* Sequence Index Slider (Conditional) */}
+          {maxSeqIndex > 0 && (
+            <div className="form-group animate-fade-in">
               <label className="block text-sm font-medium mb-2">
-                Number of Passes: <span className="text-blue-400 font-bold">{numPasses}</span>
+                Sequence Index: <span className="text-green-400 font-bold">{sequenceIndex} / {maxSeqIndex}</span>
               </label>
               <input
-                  type="range"
-                  min="1"
-                  max="10"
-                  value={numPasses}
-                  onChange={handleNumPassesChange}
-                  onMouseUp={handleNumPassesCommit}
-                  onTouchEnd={handleNumPassesCommit}
-                  className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer"
+                type="range"
+                min="0"
+                max={maxSeqIndex}
+                value={sequenceIndex}
+                onChange={handleSeqIndexChange}
+                onMouseUp={handleSeqIndexCommit}
+                onTouchEnd={handleSeqIndexCommit}
+                className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-green-500"
               />
             </div>
-
-            {/* Sequence Index Slider (Conditional) */}
-            {maxSeqIndex > 0 && (
-                <div className="form-group animate-fade-in">
-                  <label className="block text-sm font-medium mb-2">
-                    Sequence Index: <span className="text-green-400 font-bold">{sequenceIndex} / {maxSeqIndex}</span>
-                  </label>
-                  <input
-                      type="range"
-                      min="0"
-                      max={maxSeqIndex}
-                      value={sequenceIndex}
-                      onChange={handleSeqIndexChange}
-                      onMouseUp={handleSeqIndexCommit}
-                      onTouchEnd={handleSeqIndexCommit}
-                      className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-green-500"
-                  />
-                </div>
-            )}
-          </div>
-
-          {isCountLoading && (
-              <div className="text-sm text-gray-400 text-center animate-pulse">
-                Fetching sequence data...
-              </div>
           )}
         </div>
+
+        {isCountLoading && (
+          <div className="flex justify-center items-center py-2 animate-fade-in">
+            <div className="spinner-border text-primary" role="status" style={{ width: '1.5rem', height: '1.5rem' }}>
+              <span className="visually-hidden">Loading...</span>
+            </div>
+          </div>
+        )}
       </div>
+    </div>
   );
 };
 

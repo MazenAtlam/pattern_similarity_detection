@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 
-const FootballPitch = ({ inputSequence, selectedResult }) => {
+const FootballPitch = ({ inputSequence, selectedResult, isLoading }) => {
   const canvasRef = useRef(null);
 
   useEffect(() => {
@@ -60,42 +60,70 @@ const FootballPitch = ({ inputSequence, selectedResult }) => {
     ctx.fillStyle = "rgba(255, 255, 255, 0.6)";
     ctx.fill();
 
-    // Penalty boxes (simplified)
+    // Penalty boxes (18-yard)
     const penaltyWidth = pitchWidth * 0.16;
     const penaltyHeight = pitchHeight * 0.4;
+    const penaltyY = height / 2 - penaltyHeight / 2;
 
     // Left penalty box
-    ctx.strokeRect(
-      padding,
-      height / 2 - penaltyHeight / 2,
-      penaltyWidth,
-      penaltyHeight,
-    );
+    ctx.strokeRect(padding, penaltyY, penaltyWidth, penaltyHeight);
 
     // Right penalty box
-    ctx.strokeRect(
-      width - padding - penaltyWidth,
-      height / 2 - penaltyHeight / 2,
-      penaltyWidth,
-      penaltyHeight,
-    );
+    ctx.strokeRect(width - padding - penaltyWidth, penaltyY, penaltyWidth, penaltyHeight);
 
-    // Goal areas
-    const goalWidth = penaltyWidth * 0.5;
-    const goalHeight = penaltyHeight * 0.5;
+    // Goal areas (6-yard) - "Two 6-yard rectangles"
+    const goalAreaWidth = penaltyWidth * 0.35; // Approx for 6-yard vs 18-yard
+    const goalAreaHeight = penaltyHeight * 0.45;
+    const goalAreaY = height / 2 - goalAreaHeight / 2;
 
-    ctx.strokeRect(padding, height / 2 - goalHeight / 2, goalWidth, goalHeight);
+    ctx.strokeRect(padding, goalAreaY, goalAreaWidth, goalAreaHeight);
+    ctx.strokeRect(width - padding - goalAreaWidth, goalAreaY, goalAreaWidth, goalAreaHeight);
 
-    ctx.strokeRect(
-      width - padding - goalWidth,
-      height / 2 - goalHeight / 2,
-      goalWidth,
-      goalHeight,
-    );
+    // Penalty Arcs (The "D")
+    // Left Arc
+    ctx.beginPath();
+    ctx.arc(padding + penaltyWidth, height / 2, circleRadius, -Math.PI / 3, Math.PI / 3);
+    ctx.stroke();
+
+    // Right Arc
+    ctx.beginPath();
+    ctx.arc(width - padding - penaltyWidth, height / 2, circleRadius, Math.PI * 2 / 3, Math.PI * 4 / 3);
+    ctx.stroke();
+
+    // Goals - "Two thick lines representing the goal"
+    const goalMouthHeight = goalAreaHeight * 0.6; // Width of the actual goal
+    const goalMouthY = height / 2 - goalMouthHeight / 2;
+
+    ctx.lineWidth = 5; // Thicker line
+    ctx.beginPath();
+    // Left Goal
+    ctx.moveTo(padding, goalMouthY);
+    ctx.lineTo(padding, goalMouthY + goalMouthHeight);
+    // Right Goal
+    ctx.moveTo(width - padding, goalMouthY);
+    ctx.lineTo(width - padding, goalMouthY + goalMouthHeight);
+    ctx.stroke();
+    ctx.lineWidth = 2; // Reset mark
+
+    // Metric dimensions based on visualizer.py
+    const REAL_LENGTH = 105;
+    const REAL_WIDTH = 68;
 
     // Convert coordinates to canvas position
-    const toCanvasX = (x) => padding + (x / 100) * pitchWidth;
-    const toCanvasY = (y) => padding + (y / 100) * pitchHeight;
+    // Backend uses meters centered at (0,0). X: [-52.5, 52.5], Y: [-34, 34]
+    // Canvas X: 0 to pitchWidth
+    // Canvas Y: 0 to pitchHeight (Y inverted: +Y is Up in data, Down in canvas)
+
+    const toCanvasX = (x) => {
+      const pct = (x + REAL_LENGTH / 2) / REAL_LENGTH;
+      return padding + pct * pitchWidth;
+    };
+
+    const toCanvasY = (y) => {
+      // Invert Y: Top of pitch (positive y) -> Top of canvas (0)
+      const pct = (REAL_WIDTH / 2 - y) / REAL_WIDTH;
+      return padding + pct * pitchHeight;
+    };
 
     // Draw trajectories
     const drawTrajectory = (coords, color, label) => {
@@ -186,7 +214,14 @@ const FootballPitch = ({ inputSequence, selectedResult }) => {
             className="w-100 h-100"
             style={{ backgroundColor: "#1a472a" }}
           />
-          {!inputSequence && !selectedResult && (
+          {isLoading && (
+            <div className="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center bg-dark bg-opacity-50" style={{ zIndex: 10 }}>
+              <div className="spinner-border text-light" role="status" style={{ width: '3rem', height: '3rem' }}>
+                <span className="visually-hidden">Loading...</span>
+              </div>
+            </div>
+          )}
+          {!inputSequence && !selectedResult && !isLoading && (
             <div className="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center bg-dark bg-opacity-20">
               <p className="text-white text-opacity-70 mb-0">
                 Search for sequences to visualize trajectories

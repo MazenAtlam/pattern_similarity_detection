@@ -5,7 +5,7 @@ import Layout from "../src/components/layout/Layout";
 import AudioRecorder from "../src/components/audio/AudioRecorder";
 import SongResults from "../src/components/audio/SongResults";
 import Button from "../src/components/ui/Button";
-import { detectSong, mockDetectSong } from "../src/utils/api"; // Update the import path
+import { detectSong } from "../src/utils/api"; // Update the import path
 
 // Toast notification function
 const showToast = (title, message, type = "success") => {
@@ -40,34 +40,28 @@ const showToast = (title, message, type = "success") => {
 
   container.insertAdjacentHTML("beforeend", toastHtml);
 
-  // Initialize and show the toast
-  const toastElement = document.getElementById(toastId);
-  const toast = new bootstrap.Toast(toastElement);
-  toast.show();
-
-  // Remove toast from DOM after it's hidden
-  toastElement.addEventListener("hidden.bs.toast", () => {
-    toastElement.remove();
-  });
+  // // Initialize and show the toast
+  // const toastElement = document.getElementById(toastId);
+  // const toast = new bootstrap.Toast(toastElement);
+  // toast.show();
+  //
+  // // Remove toast from DOM after it's hidden
+  // toastElement.addEventListener("hidden.bs.toast", () => {
+  //   toastElement.remove();
+  // });
 };
 
 const Songs = () => {
   const [results, setResults] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [useMockAPI, setUseMockAPI] = useState(true); // Toggle between mock and real API
 
   const handleAudioReady = async (file) => {
     setIsLoading(true);
     try {
       let response;
 
-      if (useMockAPI) {
-        // Use mock API for development
-        response = await mockDetectSong(file);
-      } else {
-        // Use real API
-        response = await detectSong(file);
-      }
+      // Use real API
+      response = await detectSong(file);
 
       if (response.status === "success") {
         // Map API response to component format
@@ -108,73 +102,12 @@ const Songs = () => {
   };
 
   return (
-    <Layout>
+    <Layout
+      pageName="songs"
+      pageTitle="Humming Song Detector"
+      pageDescription="Record your melody or upload an audio file to find matching songs"
+    >
       <div className="container-fluid py-5">
-        {/* Header */}
-        <div className="row mb-4">
-          <div className="col-12">
-            <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
-              <div className="d-flex align-items-center gap-3">
-                <Link to="/">
-                  <Button
-                    variant="light"
-                    className="rounded-circle p-2 border-0"
-                  >
-                    <ArrowLeft style={{ width: "20px", height: "20px" }} />
-                  </Button>
-                </Link>
-                <div>
-                  <h1 className="h2 fw-bold text-dark d-flex align-items-center gap-3 mb-2">
-                    <div
-                      className="rounded-3 bg-gradient p-2 d-flex align-items-center justify-content-center"
-                      style={{
-                        width: "40px",
-                        height: "40px",
-                        background:
-                          "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-                      }}
-                    >
-                      <Music
-                        style={{
-                          width: "20px",
-                          height: "20px",
-                          color: "white",
-                        }}
-                      />
-                    </div>
-                    Humming Song Detector
-                  </h1>
-                  <p className="text-muted mb-0">
-                    Record your melody or upload an audio file to find matching
-                    songs
-                  </p>
-                </div>
-              </div>
-
-              {/* API Mode Toggle */}
-              <div className="d-flex align-items-center gap-2 mt-3 mt-md-0">
-                <span className="text-muted small">API Mode:</span>
-                <div className="btn-group btn-group-sm" role="group">
-                  <button
-                    type="button"
-                    className={`btn ${useMockAPI ? "btn-primary" : "btn-outline-primary"}`}
-                    onClick={() => setUseMockAPI(true)}
-                  >
-                    Mock API
-                  </button>
-                  <button
-                    type="button"
-                    className={`btn ${!useMockAPI ? "btn-primary" : "btn-outline-primary"}`}
-                    onClick={() => setUseMockAPI(false)}
-                  >
-                    Real API
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
         {/* Loading Indicator */}
         {isLoading && (
           <div className="row mb-4">
@@ -204,31 +137,6 @@ const Songs = () => {
           </div>
           <div className="col-lg-6">
             <SongResults results={results} isLoading={isLoading} />
-          </div>
-        </div>
-
-        {/* API Info */}
-        <div className="row mt-4">
-          <div className="col-12">
-            <div
-              className={`alert ${useMockAPI ? "alert-warning" : "alert-success"}`}
-            >
-              <h5 className="alert-heading">
-                {useMockAPI ? "Using Mock API" : "Using Real API"}
-              </h5>
-              <p className="mb-0">
-                {useMockAPI
-                  ? 'Currently using mock data for demonstration. Switch to "Real API" when your backend is running.'
-                  : "Connected to real API endpoint. Make sure your backend server is running."}
-              </p>
-              {!useMockAPI && (
-                <div className="mt-2">
-                  <small className="text-muted">
-                    API Endpoint: <code>POST /api/v1/songs/detect</code>
-                  </small>
-                </div>
-              )}
-            </div>
           </div>
         </div>
       </div>

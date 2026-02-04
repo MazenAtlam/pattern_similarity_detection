@@ -11,11 +11,11 @@ const Footer = () => {
                             <Activity className="footer-logo-icon" />
                         </div>
                         <span className="footer-brand-text">
-              Fourier Similarity Detector
-            </span>
+                            Fourier Similarity Detector
+                        </span>
                     </div>
                     <p className="footer-copyright">
-                        © 2025 Fourier Similarity Detector. All rights reserved.
+                        © 2026 Fourier Similarity Detector. All rights reserved.
                     </p>
                 </div>
             </div>

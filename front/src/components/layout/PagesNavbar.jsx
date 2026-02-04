@@ -1,11 +1,12 @@
-import {Link} from "react-router-dom";
-import {ArrowLeft, Trophy} from "lucide-react";
+import { Link } from "react-router-dom";
+import { ArrowLeft, Trophy, Music } from "lucide-react";
 import "../../../styles/PagesNavbar.css"
 
 const PagesNavbar = ({
+    pageName,
     pageTitle,
     pageDescription,
-                     }) => {
+}) => {
     return (
         <div className="fifa-header pt-3">
             <div className="fifa-header-left ms-3">
@@ -17,7 +18,17 @@ const PagesNavbar = ({
                 <div>
                     <div className="fifa-title-container">
                         <div className="fifa-icon-container">
-                            <Trophy className="fifa-icon" />
+                            {(pageName === "fifa") ?
+                                <Trophy className="fifa-icon" />
+                                :
+                                <Music
+                                    style={{
+                                        width: "20px",
+                                        height: "20px",
+                                        color: "white"
+                                    }}
+                                />
+                            }
                         </div>
                         <h1 className="fifa-title">
                             {pageTitle}

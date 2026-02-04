@@ -5,7 +5,7 @@ def create_app():
     app = Flask(__name__)
     
     # Enable CORS to allow requests from your React Frontend
-    CORS(app) 
+    CORS(app, resources={r"/*": {"origins": "*"}}) 
     
     # Register Blueprints
     from api.routes.songs import songs_bp
