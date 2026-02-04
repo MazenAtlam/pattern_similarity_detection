@@ -10,10 +10,14 @@ const AudioRecorder = ({ onAudioReady }) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [activeTab, setActiveTab] = useState("record");
   const [waveformBars, setWaveformBars] = useState(Array(20).fill(0.3));
+  const [errorMsg, setErrorMsg] = useState(null);
   const fileInputRef = useRef(null);
-  const audioRef = useRef(null);
-  const timerRef = useRef();
+  const mediaRecorderRef = useRef(null);
+  const audioChunksRef = useRef([]);
+  const audioRef = useRef(null); // Restored
+  const timerRef = useRef(null); // Restored
 
+  // Restored timer and waveform logic
   useEffect(() => {
     if (isRecording) {
       timerRef.current = setInterval(() => {
@@ -39,18 +43,50 @@ const AudioRecorder = ({ onAudioReady }) => {
     };
   }, [isRecording]);
 
-  const handleStartRecording = () => {
-    setIsRecording(true);
-    setRecordingTime(0);
+  const handleStartRecording = async () => {
+    setErrorMsg(null);
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+
+      mediaRecorderRef.current = new MediaRecorder(stream);
+      audioChunksRef.current = [];
+
+      mediaRecorderRef.current.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          audioChunksRef.current.push(event.data);
+        }
+      };
+
+      mediaRecorderRef.current.onstop = () => {
+        const audioBlob = new Blob(audioChunksRef.current, { type: "audio/wav" });
+        const url = URL.createObjectURL(audioBlob);
+        setAudioUrl(url);
+        onAudioReady(audioBlob);
+
+        // Stop all tracks to release microphone
+        stream.getTracks().forEach(track => track.stop());
+      };
+
+      mediaRecorderRef.current.start();
+      setIsRecording(true);
+      setRecordingTime(0);
+    } catch (err) {
+      console.error("Error accessing microphone:", err);
+      if (err.name === "NotAllowedError") {
+        setErrorMsg("Microphone access denied. Please allow microphone permissions.");
+      } else if (err.name === "NotFoundError") {
+        setErrorMsg("No microphone found. Please connect a microphone.");
+      } else {
+        setErrorMsg("Could not access microphone. " + err.message);
+      }
+    }
   };
 
   const handleStopRecording = () => {
-    setIsRecording(false);
-    // Simulate creating a blob
-    const mockBlob = new Blob(["mock audio data"], { type: "audio/wav" });
-    const url = URL.createObjectURL(mockBlob);
-    setAudioUrl(url);
-    onAudioReady(mockBlob);
+    if (mediaRecorderRef.current && isRecording) {
+      mediaRecorderRef.current.stop();
+      setIsRecording(false);
+    }
   };
 
   const handleFileUpload = (e) => {
@@ -133,6 +169,13 @@ const AudioRecorder = ({ onAudioReady }) => {
           <div
             className={`tab-pane fade ${activeTab === "record" ? "show active" : ""}`}
           >
+            {/* Error / Permission Message */}
+            {errorMsg && (
+              <div className="alert alert-danger py-2 mb-3 text-center small">
+                {errorMsg}
+              </div>
+            )}
+
             {/* Waveform Visualization */}
             <div
               className="bg-light bg-opacity-25 rounded-3 d-flex align-items-center justify-content-center gap-1 px-4 mb-4"

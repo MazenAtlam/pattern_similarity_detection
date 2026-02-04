@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Play, Pause, ChevronLeft, ChevronRight, Music2 } from "lucide-react";
 
 const SongResults = ({ results, isLoading }) => {
   const [playingId, setPlayingId] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
+  const audioRef = useRef(null);
   const itemsPerPage = 5;
 
   const sortedResults = [...results].sort(
@@ -15,8 +16,40 @@ const SongResults = ({ results, isLoading }) => {
     currentPage * itemsPerPage,
   );
 
-  const handlePlayPause = (id) => {
-    setPlayingId(playingId === id ? null : id);
+  // Cleanup audio on unmount
+  useEffect(() => {
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
+      }
+    };
+  }, []);
+
+  const handlePlayPause = (id, url) => {
+    if (playingId === id) {
+      // Pause
+      if (audioRef.current) {
+        audioRef.current.pause();
+      }
+      setPlayingId(null);
+    } else {
+      // Play new song
+      if (audioRef.current) {
+        audioRef.current.pause();
+      }
+
+      // Add base URL if needed, assuming url is relative like "/static/..."
+      const fullUrl = `http://localhost:5000${url}`;
+      audioRef.current = new Audio(fullUrl);
+
+      audioRef.current.play().catch(e => console.error("Error playing audio:", e));
+      setPlayingId(id);
+
+      audioRef.current.onended = () => {
+        setPlayingId(null);
+      };
+    }
   };
 
   const getSimilarityColor = (similarity) => {
@@ -145,7 +178,7 @@ const SongResults = ({ results, isLoading }) => {
                   <td className="text-center">
                     <button
                       className="btn btn-outline-primary btn-sm rounded-circle"
-                      onClick={() => handlePlayPause(song.id)}
+                      onClick={() => handlePlayPause(song.id, song.fileUrl)}
                     >
                       {playingId === song.id ? (
                         <Pause style={{ width: "16px", height: "16px" }} />

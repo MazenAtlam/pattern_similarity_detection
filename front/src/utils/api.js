@@ -2,23 +2,7 @@
 
 const API_BASE_URL = 'http://localhost:5000/api/v1'; // Update with your backend URL
 
-/**
- * Converts audio blob to base64 string
- * @param {Blob|File} audioBlob - The audio file to convert
- * @returns {Promise<string>} - Base64 encoded string
- */
-const blobToBase64 = (audioBlob) => {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.readAsDataURL(audioBlob);
-    reader.onloadend = () => {
-      // Extract base64 data (remove data URL prefix)
-      const base64String = reader.result.split(',')[1];
-      resolve(base64String);
-    };
-    reader.onerror = reject;
-  });
-};
+
 
 /**
  * Detects matching songs from hummed audio
@@ -27,35 +11,18 @@ const blobToBase64 = (audioBlob) => {
  */
 export const detectSong = async (audioFile) => {
   try {
-    // Convert audio file to base64
-    const base64Audio = await blobToBase64(audioFile);
-
-    // Determine audio format from MIME type
-    let audioFormat;
-    if (audioFile.type.includes('wav')) {
-      audioFormat = 'wav';
-    } else if (audioFile.type.includes('mp3')) {
-      audioFormat = 'mp3';
-    } else if (audioFile.type.includes('m4a')) {
-      audioFormat = 'm4a';
-    } else if (audioFile.type.includes('ogg')) {
-      audioFormat = 'ogg';
-    } else {
-      audioFormat = 'wav'; // Default
-    }
-
-    const payload = {
-      audio_format: audioFormat,
-      sample_rate: 44100, // Standard sample rate
-      audio_data: base64Audio
-    };
+    const formData = new FormData();
+    // Check if audioFile is a File (has name) or just a Blob
+    const fileName = audioFile.name || 'recording.wav';
+    formData.append('audio_data', audioFile, fileName);
+    // Optional: Add version if needed, or other metadata
+    // formData.append('version', 'v0'); 
 
     const response = await fetch(`${API_BASE_URL}/songs/detect`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(payload),
+      // Content-Type header MUST NOT be set manually for FormData; 
+      // the browser sets it with the correct boundary.
+      body: formData,
     });
 
     if (!response.ok) {
